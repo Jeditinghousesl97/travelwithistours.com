@@ -8,3 +8,18 @@ Options -Indexes
 <Files ".htaccess">
     Require all denied
 </Files>
+
+# Increase PHP upload limits for self-hosted hero videos when mod_php is available.
+<IfModule mod_php.c>
+    php_value upload_max_filesize 128M
+    php_value post_max_size 128M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+</IfModule>
+
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 128M
+    php_value post_max_size 128M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+</IfModule>

@@ -6,18 +6,145 @@ $error = '';
 $edit_mode = false;
 $slide_to_edit = null;
 
+function parse_ini_size_to_bytes(string $value): int
+{
+    $value = trim($value);
+    if ($value === '') {
+        return 0;
+    }
+
+    $unit = strtolower(substr($value, -1));
+    $number = (float) $value;
+
+    return match ($unit) {
+        'g' => (int) ($number * 1024 * 1024 * 1024),
+        'm' => (int) ($number * 1024 * 1024),
+        'k' => (int) ($number * 1024),
+        default => (int) $number,
+    };
+}
+
+function format_bytes_human(int $bytes): string
+{
+    if ($bytes >= 1024 * 1024 * 1024) {
+        return round($bytes / (1024 * 1024 * 1024), 2) . ' GB';
+    }
+
+    if ($bytes >= 1024 * 1024) {
+        return round($bytes / (1024 * 1024), 2) . ' MB';
+    }
+
+    if ($bytes >= 1024) {
+        return round($bytes / 1024, 2) . ' KB';
+    }
+
+    return $bytes . ' B';
+}
+
+function ensure_hero_slides_media_columns(PDO $pdo): void
+{
+    $column_rows = $pdo->query("SHOW COLUMNS FROM hero_slides")->fetchAll(PDO::FETCH_ASSOC);
+    $columns = array_column($column_rows, 'Field');
+
+    if (!in_array('slide_type', $columns, true)) {
+        $pdo->exec("ALTER TABLE hero_slides ADD COLUMN slide_type VARCHAR(20) NOT NULL DEFAULT 'image' AFTER image_path");
+    }
+
+    if (!in_array('video_url', $columns, true)) {
+        $pdo->exec("ALTER TABLE hero_slides ADD COLUMN video_url TEXT NULL AFTER slide_type");
+    }
+
+    foreach ($column_rows as $column) {
+        if (($column['Field'] ?? '') !== 'image_path') {
+            continue;
+        }
+
+        if (($column['Null'] ?? 'NO') === 'YES') {
+            break;
+        }
+
+        $column_type = $column['Type'] ?? 'VARCHAR(255)';
+        $default_sql = '';
+
+        if (array_key_exists('Default', $column)) {
+            if ($column['Default'] === null) {
+                $default_sql = ' DEFAULT NULL';
+            } else {
+                $default_sql = " DEFAULT " . $pdo->quote((string) $column['Default']);
+            }
+        }
+
+        $pdo->exec("ALTER TABLE hero_slides MODIFY image_path {$column_type} NULL{$default_sql}");
+        break;
+    }
+}
+
+function upload_hero_media(array $file, string $target_dir, array $allowed_ext, string $prefix): ?string
+{
+    if (!isset($file['error']) || $file['error'] !== 0) {
+        return null;
+    }
+
+    if (!file_exists($target_dir)) {
+        mkdir($target_dir, 0777, true);
+    }
+
+    $file_ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($file_ext, $allowed_ext, true)) {
+        return null;
+    }
+
+    $file_name = $prefix . time() . '_' . preg_replace('/[^A-Za-z0-9._-]/', '_', basename($file['name']));
+    $target_file = $target_dir . $file_name;
+
+    if (!move_uploaded_file($file['tmp_name'], $target_file)) {
+        return null;
+    }
+
+    return str_replace('../', '', $target_file);
+}
+
+function delete_local_media(?string $path): void
+{
+    if (!$path) {
+        return;
+    }
+
+    $full_path = "../" . ltrim($path, '/');
+    if (file_exists($full_path)) {
+        unlink($full_path);
+    }
+}
+
+ensure_hero_slides_media_columns($pdo);
+
+$upload_max_bytes = parse_ini_size_to_bytes((string) ini_get('upload_max_filesize'));
+$post_max_bytes = parse_ini_size_to_bytes((string) ini_get('post_max_size'));
+$effective_upload_limit = min(array_filter([$upload_max_bytes, $post_max_bytes])) ?: max($upload_max_bytes, $post_max_bytes);
+
+if (
+    $_SERVER['REQUEST_METHOD'] === 'POST'
+    && empty($_POST)
+    && empty($_FILES)
+    && !empty($_SERVER['CONTENT_LENGTH'])
+    && (int) $_SERVER['CONTENT_LENGTH'] > 0
+) {
+    $error = "The uploaded request was too large for the server. Current upload limit: " . format_bytes_human($effective_upload_limit) . ". Please use a smaller file, host the video externally, or increase the PHP upload limits.";
+}
+
 // Handle Delete (Logic First)
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
-    $stmt = $pdo->prepare("SELECT image_path FROM hero_slides WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT image_path, slide_type, video_url FROM hero_slides WHERE id = ?");
     $stmt->execute([$id]);
     $slide = $stmt->fetch();
 
     if ($slide) {
         $stmt = $pdo->prepare("DELETE FROM hero_slides WHERE id = ?");
         if ($stmt->execute([$id])) {
-            if (file_exists("../" . $slide['image_path'])) {
-                unlink("../" . $slide['image_path']);
+            delete_local_media($slide['image_path']);
+            if (($slide['slide_type'] ?? 'image') === 'video' && !empty($slide['video_url']) && str_starts_with($slide['video_url'], 'assets/images/hero/')) {
+                delete_local_media($slide['video_url']);
             }
             header("Location: slider.php?msg=deleted");
             exit;
@@ -30,73 +157,105 @@ if (isset($_GET['delete'])) {
 
 // Handle Form Submission (Add or Update)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $title = $_POST['title'];
-    $subtitle = $_POST['subtitle'];
-    $button_text = $_POST['button_text'];
-    $button_link = $_POST['button_link'];
+    $title = trim($_POST['title'] ?? '');
+    $subtitle = trim($_POST['subtitle'] ?? '');
+    $button_text = trim($_POST['button_text'] ?? '');
+    $button_link = trim($_POST['button_link'] ?? '');
     $display_order = $_POST['display_order'] ?? 0;
+    $slide_type = $_POST['slide_type'] ?? 'image';
+    $external_video_url = trim($_POST['video_url'] ?? '');
 
     $id = $_POST['id'] ?? null;
 
+    $existing_slide = null;
+    if ($id) {
+        $stmt = $pdo->prepare("SELECT * FROM hero_slides WHERE id = ?");
+        $stmt->execute([$id]);
+        $existing_slide = $stmt->fetch();
+    }
+
     $image_path = null;
-    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        $target_dir = "../assets/images/hero/";
-        if (!file_exists($target_dir))
-            mkdir($target_dir, 0777, true);
-
-        $file_name = time() . '_' . basename($_FILES["image"]["name"]);
-        $target_file = $target_dir . $file_name;
-
-        if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
-            $image_path = "assets/images/hero/" . $file_name;
-        }
-        else {
+    if (isset($_FILES['image']) && $_FILES['image']['error'] == UPLOAD_ERR_INI_SIZE) {
+        $error = "The image exceeds the server upload limit of " . format_bytes_human($effective_upload_limit) . ".";
+    } elseif (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+        $image_path = upload_hero_media($_FILES['image'], "../assets/images/hero/", ['jpg', 'jpeg', 'png', 'webp', 'gif'], 'image_');
+        if (!$image_path) {
             $error = "Failed to upload image.";
         }
     }
 
+    $uploaded_video_path = null;
+    if (isset($_FILES['video_file']) && $_FILES['video_file']['error'] == UPLOAD_ERR_INI_SIZE) {
+        $error = "The video exceeds the server upload limit of " . format_bytes_human($effective_upload_limit) . ". Please upload a smaller file or use an external/direct video URL instead.";
+    } elseif (isset($_FILES['video_file']) && $_FILES['video_file']['error'] == 0) {
+        $uploaded_video_path = upload_hero_media($_FILES['video_file'], "../assets/images/hero/", ['mp4', 'webm', 'ogg', 'mov', 'm4v'], 'video_');
+        if (!$uploaded_video_path) {
+            $error = "Failed to upload video. Allowed formats: mp4, webm, ogg, mov, m4v.";
+        }
+    }
+
     if (!$error) {
+        $video_url = null;
+        if ($slide_type === 'image') {
+            $video_url = null;
+            if ($uploaded_video_path) {
+                delete_local_media($uploaded_video_path);
+                $uploaded_video_path = null;
+            }
+        } elseif ($slide_type === 'video') {
+            $video_url = $uploaded_video_path ?: ($external_video_url ?: ($existing_slide['video_url'] ?? null));
+            if (!$video_url) {
+                $error = "Please upload a video file or provide a direct video URL.";
+            }
+        } elseif (in_array($slide_type, ['youtube', 'embed'], true)) {
+            $video_url = $external_video_url ?: ($existing_slide['video_url'] ?? null);
+            if ($uploaded_video_path) {
+                delete_local_media($uploaded_video_path);
+                $uploaded_video_path = null;
+            }
+            if (!$video_url) {
+                $error = "Please provide a video URL for this slide type.";
+            }
+        } else {
+            $error = "Invalid slide type selected.";
+        }
+    }
+
+    if (!$error) {
+        $final_image_path = $image_path ?: ($existing_slide['image_path'] ?? null);
+
         if ($id) {
             // Update
-            if ($image_path) {
-                // Fetch old image to delete
-                $stmt = $pdo->prepare("SELECT image_path FROM hero_slides WHERE id = ?");
-                $stmt->execute([$id]);
-                $old_slide = $stmt->fetch();
-                if ($old_slide && file_exists("../" . $old_slide['image_path'])) {
-                    unlink("../" . $old_slide['image_path']);
-                }
+            if ($image_path && !empty($existing_slide['image_path']) && $existing_slide['image_path'] !== $image_path) {
+                delete_local_media($existing_slide['image_path']);
+            }
 
-                $stmt = $pdo->prepare("UPDATE hero_slides SET image_path=?, title=?, subtitle=?, button_text=?, button_link=?, display_order=? WHERE id=?");
-                $result = $stmt->execute([$image_path, $title, $subtitle, $button_text, $button_link, $display_order, $id]);
+            if (($existing_slide['slide_type'] ?? 'image') === 'video' && !empty($existing_slide['video_url']) && $existing_slide['video_url'] !== $video_url && str_starts_with($existing_slide['video_url'], 'assets/images/hero/')) {
+                delete_local_media($existing_slide['video_url']);
             }
-            else {
-                $stmt = $pdo->prepare("UPDATE hero_slides SET title=?, subtitle=?, button_text=?, button_link=?, display_order=? WHERE id=?");
-                $result = $stmt->execute([$title, $subtitle, $button_text, $button_link, $display_order, $id]);
-            }
+
+            $stmt = $pdo->prepare("UPDATE hero_slides SET image_path=?, slide_type=?, video_url=?, title=?, subtitle=?, button_text=?, button_link=?, display_order=? WHERE id=?");
+            $result = $stmt->execute([$final_image_path, $slide_type, $video_url, $title, $subtitle, $button_text, $button_link, $display_order, $id]);
 
             if ($result) {
                 header("Location: slider.php?msg=updated");
                 exit;
-            }
-            else
+            } else {
                 $error = "Database error during update.";
-
-        }
-        else {
+            }
+        } else {
             // Create
-            if ($image_path) {
-                $stmt = $pdo->prepare("INSERT INTO hero_slides (image_path, title, subtitle, button_text, button_link, display_order) VALUES (?, ?, ?, ?, ?, ?)");
-                if ($stmt->execute([$image_path, $title, $subtitle, $button_text, $button_link, $display_order])) {
+            if ($slide_type === 'image' && !$image_path) {
+                $error = "Please select an image for a new image slide.";
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO hero_slides (image_path, slide_type, video_url, title, subtitle, button_text, button_link, display_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                if ($stmt->execute([$final_image_path, $slide_type, $video_url, $title, $subtitle, $button_text, $button_link, $display_order])) {
                     header("Location: slider.php?msg=added");
                     exit;
                 }
                 else {
                     $error = "Database error.";
                 }
-            }
-            else {
-                $error = "Please select an image for new slide.";
             }
         }
     }
@@ -164,6 +323,18 @@ endif; ?>
                     <label class="form-label">Slide Title</label>
                     <input type="text" name="title" class="form-control" placeholder="e.g. Discover Sri Lanka" value="<?php echo $edit_mode ? htmlspecialchars($slide_to_edit['title']) : ''; ?>" required>
                 </div>
+
+                <div class="form-group">
+                    <label class="form-label">Slide Type</label>
+                    <select name="slide_type" id="slide_type" class="form-control">
+                        <?php $current_slide_type = $edit_mode ? ($slide_to_edit['slide_type'] ?? 'image') : 'image'; ?>
+                        <option value="image" <?php echo $current_slide_type === 'image' ? 'selected' : ''; ?>>Image</option>
+                        <option value="youtube" <?php echo $current_slide_type === 'youtube' ? 'selected' : ''; ?>>YouTube Video</option>
+                        <option value="video" <?php echo $current_slide_type === 'video' ? 'selected' : ''; ?>>Self Hosted / Direct Video URL</option>
+                        <option value="embed" <?php echo $current_slide_type === 'embed' ? 'selected' : ''; ?>>Other Embed Link</option>
+                    </select>
+                    <small style="color: #666; display: block; margin-top: 5px;">Use Image for normal slides, YouTube for YouTube links, Video for uploaded/direct `.mp4`/`.webm`, and Embed for other iframe-ready links.</small>
+                </div>
                 
                 <div class="form-group">
                     <label class="form-label">Subtitle</label>
@@ -185,16 +356,28 @@ endif; ?>
                     <label class="form-label">Display Order</label>
                     <input type="number" name="display_order" class="form-control" value="<?php echo $edit_mode ? htmlspecialchars($slide_to_edit['display_order']) : '0'; ?>" style="width: 120px;">
                 </div>
+
+                <div class="form-group media-field-group media-url-group">
+                    <label class="form-label">Video / Embed URL</label>
+                    <input type="text" name="video_url" class="form-control" placeholder="YouTube link, direct video URL, or embed URL" value="<?php echo $edit_mode ? htmlspecialchars($slide_to_edit['video_url'] ?? '') : ''; ?>">
+                    <small style="color: #666; display: block; margin-top: 5px;">Examples: `https://youtu.be/...`, direct `.mp4` URL, or an embeddable player URL.</small>
+                </div>
+
+                <div class="form-group media-field-group video-upload-group">
+                    <label class="form-label">Upload Video File</label>
+                    <input type="file" name="video_file" class="form-control" accept="video/mp4,video/webm,video/ogg,video/quicktime,.mp4,.webm,.ogg,.mov,.m4v" style="padding: 8px;">
+                    <small style="color: #666; display: block; margin-top: 5px;">Optional. If uploaded, it will be used for `Self Hosted / Direct Video URL` slides. Current server upload limit: <?php echo htmlspecialchars(format_bytes_human($effective_upload_limit)); ?>.</small>
+                </div>
             </div>
 
-            <!-- Right Side: Image Upload -->
+            <!-- Right Side: Media Upload / Preview -->
             <div class="form-section" style="background: #fcfcfc; border: 1px dashed #ddd; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px;">
-                <label class="form-label" style="align-self: flex-start;">Slide Image (Recommended: 1920x800px)</label>
+                <label class="form-label" style="align-self: flex-start;">Slide Image / Poster (Recommended: 1920x800px)</label>
                 
                 <?php if ($edit_mode && $slide_to_edit['image_path']): ?>
                     <div style="margin: 15px 0; text-align: center;">
                         <img src="../<?php echo $slide_to_edit['image_path']; ?>" style="width: 100%; max-width: 300px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid #fff;">
-                        <p style="font-size: 11px; color: #888; margin-top: 8px;">Existing Image</p>
+                        <p style="font-size: 11px; color: #888; margin-top: 8px;">Existing Image / Poster</p>
                     </div>
                 <?php
 else: ?>
@@ -206,8 +389,8 @@ else: ?>
 endif; ?>
 
                 <div style="width: 100%;">
-                    <input type="file" name="image" class="form-control" accept="image/*" <?php echo $edit_mode ? '' : 'required'; ?> style="padding: 8px;">
-                    <small style="color: #666; display: block; margin-top: 5px;">Upload a high-quality landscape image.</small>
+                    <input type="file" name="image" class="form-control" accept="image/*" style="padding: 8px;">
+                    <small style="color: #666; display: block; margin-top: 5px;">Required for image slides. Optional as a poster/fallback for video slides.</small>
                 </div>
             </div>
         </div>
@@ -232,6 +415,7 @@ endif; ?>
                 <tr style="background: transparent;">
                     <th style="background: transparent; padding-bottom: 15px;">Order</th>
                     <th style="background: transparent; padding-bottom: 15px;">Preview</th>
+                    <th style="background: transparent; padding-bottom: 15px;">Type</th>
                     <th style="background: transparent; padding-bottom: 15px;">Slide Info</th>
                     <th style="background: transparent; padding-bottom: 15px;">Call to Action</th>
                     <th style="background: transparent; padding-bottom: 15px; text-align: right;">Actions</th>
@@ -245,8 +429,24 @@ endif; ?>
                     </td>
                     <td style="padding: 20px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; width: 140px;">
                         <div style="width: 120px; height: 60px; border-radius: 6px; overflow: hidden; border: 1px solid #eee;">
-                            <img src="../<?php echo $slide['image_path']; ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                            <?php $slide_type = $slide['slide_type'] ?? 'image'; ?>
+                            <?php if (!empty($slide['image_path'])): ?>
+                                <img src="../<?php echo htmlspecialchars($slide['image_path']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                            <?php elseif ($slide_type === 'youtube'): ?>
+                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #111; color: #fff; font-size: 24px;">
+                                    <i class="fab fa-youtube"></i>
+                                </div>
+                            <?php else: ?>
+                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #111; color: #fff; font-size: 24px;">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                            <?php endif; ?>
                         </div>
+                    </td>
+                    <td style="padding: 20px; border-top: 1px solid #eee; border-bottom: 1px solid #eee;">
+                        <span style="font-size: 12px; color: #555; background: #f0f0f0; padding: 6px 10px; border-radius: 12px; text-transform: capitalize;">
+                            <?php echo htmlspecialchars($slide_type); ?>
+                        </span>
                     </td>
                     <td style="padding: 20px; border-top: 1px solid #eee; border-bottom: 1px solid #eee;">
                         <div style="font-weight: 600; color: #333; font-size: 16px; margin-bottom: 4px;"><?php echo htmlspecialchars($slide['title']); ?></div>
@@ -290,5 +490,32 @@ endif; ?>
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const slideTypeSelect = document.getElementById('slide_type');
+        const mediaUrlGroup = document.querySelector('.media-url-group');
+        const videoUploadGroup = document.querySelector('.video-upload-group');
+
+        function toggleMediaFields() {
+            const type = slideTypeSelect ? slideTypeSelect.value : 'image';
+            const isImage = type === 'image';
+            const isVideo = type === 'video';
+
+            if (mediaUrlGroup) {
+                mediaUrlGroup.style.display = isImage ? 'none' : 'block';
+            }
+
+            if (videoUploadGroup) {
+                videoUploadGroup.style.display = isVideo ? 'block' : 'none';
+            }
+        }
+
+        if (slideTypeSelect) {
+            slideTypeSelect.addEventListener('change', toggleMediaFields);
+            toggleMediaFields();
+        }
+    });
+</script>
 
 <?php include 'includes/footer.php'; ?>

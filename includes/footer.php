@@ -55,7 +55,7 @@ if (isset($pdo)) {
                     <?php
 $footer_logo_path = !empty($h_settings['footer_logo']) ? $h_settings['footer_logo'] : (!empty($h_settings['site_logo']) ? $h_settings['site_logo'] : 'assets/logo/logo.png');
 ?>
-                    <img src="<?php echo htmlspecialchars($footer_logo_path); ?>" alt="<?php echo htmlspecialchars($h_settings['site_title'] ?? 'GPS Lanka Travels'); ?>" style="height: 70px; width: auto;">
+                    <img src="<?php echo htmlspecialchars($footer_logo_path); ?>" alt="<?php echo htmlspecialchars($h_settings['site_title'] ?? 'Travel with IS Tours'); ?>" style="height: 70px; width: auto;">
                 </a>
                 
                 <?php if (!empty($h_settings['footer_about_text'])): ?>
@@ -191,7 +191,7 @@ endif; ?>
         </div>
 
         <div class="footer-bottom">
-             <p><?php echo $h_settings['footer_copyright_text'] ?? '&copy; ' . date('Y') . ' GPS Lanka Travels. All Rights Reserved.'; ?> | Designed by <a href="https://www.asseminate.com" target="_blank">Asseminate</a></p>
+             <p><?php echo $h_settings['footer_copyright_text'] ?? '&copy; ' . date('Y') . ' Travel with IS Tours. All Rights Reserved.'; ?> | Designed by <a href="https://www.asseminate.com" target="_blank">Asseminate</a></p>
         </div>
     </div>
 </footer>

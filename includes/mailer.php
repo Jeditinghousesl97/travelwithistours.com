@@ -27,7 +27,7 @@ function sendInquiryEmail($pdo, $subject, $body)
     $smtp_pass = $settings['smtp_pass'] ?? '';
     $smtp_port = $settings['smtp_port'] ?? 587;
     $to_email = $settings['notification_email'] ?? '';
-    $from_name = $settings['email_from_name'] ?? 'GPS Lanka Travels';
+    $from_name = $settings['email_from_name'] ?? 'Travel with IS Tours';
 
     if (empty($smtp_host) || empty($to_email)) {
         error_log("Mailer: SMTP Host or Notification Email not set.");

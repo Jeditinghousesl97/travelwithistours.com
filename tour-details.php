@@ -391,7 +391,7 @@ endif; ?>
                     <i class="far fa-compass" style="font-size: 28px;"></i>
                 </div>
                 <h3 style="font-size: 20px; font-family: 'Playfair Display', serif; margin-bottom: 15px; color: #333;">Proven experience</h3>
-                <p style="color: #666; font-size: 14px; line-height: 1.6;">The GPS Lanka Travels team comprises of locals who are well experienced in the field.</p>
+                <p style="color: #666; font-size: 14px; line-height: 1.6;">The Travel with IS Tours team comprises locals who are well experienced in the field.</p>
             </div>
 
             <!-- Item 3 -->

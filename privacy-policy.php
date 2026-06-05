@@ -16,17 +16,17 @@ include 'includes/header.php';
     <div class="container">
         <div style="max-width: 900px; margin: 0 auto; color: #444; line-height: 1.8;">
             <h2 style="color: #333; margin-bottom: 20px;">1. Information We Collect</h2>
-            <p>At GPS Lanka Travels, we collect information to provide better services to our users. We collect information in the following ways:</p>
+            <p>At Travel with IS Tours, we collect information to provide better services to our users. We collect information in the following ways:</p>
             <ul style="margin-bottom: 30px; padding-left: 20px;">
                 <li><strong>Information you give us:</strong> For example, when you fill out an enquiry form or contact us, we ask for personal information, like your name, email address, and telephone number.</li>
                 <li><strong>Information we get from your use of our services:</strong> We may collect information about the services that you use and how you use them, like when you visit our website.</li>
             </ul>
 
             <h2 style="color: #333; margin-bottom: 20px;">2. How We Use Information</h2>
-            <p>We use the information we collect from all of our services to provide, maintain, protect and improve them, to develop new ones, and to protect GPS Lanka Travels and our users. We also use this information to offer you tailored content – like giving you more relevant search results and ads.</p>
+            <p>We use the information we collect from all of our services to provide, maintain, protect and improve them, to develop new ones, and to protect Travel with IS Tours and our users. We also use this information to offer you tailored content – like giving you more relevant search results and ads.</p>
 
             <h2 style="color: #333; margin-bottom: 20px;">3. Information Security</h2>
-            <p>We work hard to protect GPS Lanka Travels and our users from unauthorized access to or unauthorized alteration, disclosure or destruction of information we hold. We restrict access to personal information to GPS Lanka Travels employees, contractors and agents who need to know that information in order to process it for us, and who are subject to strict contractual confidentiality obligations.</p>
+            <p>We work hard to protect Travel with IS Tours and our users from unauthorized access to or unauthorized alteration, disclosure or destruction of information we hold. We restrict access to personal information to Travel with IS Tours employees, contractors and agents who need to know that information in order to process it for us, and who are subject to strict contractual confidentiality obligations.</p>
 
             <h2 style="color: #333; margin-bottom: 20px;">4. Cookies and Similar Technologies</h2>
             <p>We use various technologies to collect and store information when you visit our website, and this may include using cookies or similar technologies to identify your browser or device. We also use these technologies to collect and store information when you interact with services we offer to our partners, such as advertising services or Google features that may appear on other sites.</p>
@@ -44,3 +44,6 @@ include 'includes/header.php';
 
 <?php include 'includes/prefooter.php'; ?>
 <?php include 'includes/footer.php'; ?>
+
+
+

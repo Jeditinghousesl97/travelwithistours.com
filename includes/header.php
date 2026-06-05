@@ -49,8 +49,8 @@ $base_url = $h_settings['site_base_url'] ?? '';
 $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 
 // Page specific meta defaults
-$meta_title = isset($page_title) ? $page_title . " - " . ($h_settings['site_title'] ?? 'GPS Lanka Travels') : ($h_settings['site_title'] ?? 'GPS Lanka Travels');
-$meta_desc = $page_description ?? ($h_settings['seo_meta_description'] ?? 'GPS Lanka Travels – Curating timeless Sri Lankan escapes with culture, comfort, and class.');
+$meta_title = isset($page_title) ? $page_title . " - " . ($h_settings['site_title'] ?? 'Travel with IS Tours') : ($h_settings['site_title'] ?? 'Travel with IS Tours');
+$meta_desc = $page_description ?? ($h_settings['seo_meta_description'] ?? 'Travel with IS Tours - Curating authentic Sri Lankan journeys with comfort, care, and local insight.');
 $meta_key = $page_keywords ?? ($h_settings['seo_meta_keywords'] ?? '');
 $og_img = $page_og_image ?? ($h_settings['seo_og_image'] ?? 'assets/images/og-image.jpg');
 
@@ -453,7 +453,7 @@ endif; ?>
             <div class="center">
                 <a href="index.php">
                     <?php $logo_path = !empty($h_settings['site_logo']) ? $h_settings['site_logo'] : 'assets/logo/logo.png'; ?>
-                    <img src="<?php echo htmlspecialchars($logo_path); ?>" alt="<?php echo htmlspecialchars($h_settings['site_title'] ?? 'GPS Lanka Travels'); ?>">
+                    <img src="<?php echo htmlspecialchars($logo_path); ?>" alt="<?php echo htmlspecialchars($h_settings['site_title'] ?? 'Travel with IS Tours'); ?>">
                 </a>
             </div>
 
@@ -545,7 +545,12 @@ function googleTranslateElementInit() {
                 
                 // Set Cookie for Persistence (Crucial for Google Translate)
                 setCookie('googtrans', '/en/' + langCode, 1); // 1 day
-                setCookie('googtrans', '/en/' + langCode, 1, '/', '.gpslankatravels.com'); // Domain wide
+
+                // Persist across the current domain and its subdomains without hardcoding a specific brand domain.
+                const cookieDomain = getCookieDomain(window.location.hostname);
+                if (cookieDomain) {
+                    setCookie('googtrans', '/en/' + langCode, 1, '/', cookieDomain);
+                }
                 
                 // Trigger Google Translate Widget
                 const googleSelect = document.querySelector('.goog-te-combo');
@@ -590,6 +595,19 @@ function googleTranslateElementInit() {
                 if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
             }
             return null;
+        }
+
+        function getCookieDomain(hostname) {
+            if (!hostname || hostname === 'localhost' || /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) {
+                return null;
+            }
+
+            const parts = hostname.split('.');
+            if (parts.length < 2) {
+                return null;
+            }
+
+            return '.' + parts.slice(-2).join('.');
         }
 
         

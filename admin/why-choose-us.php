@@ -23,7 +23,7 @@ try {
     if ($count == 0) {
         $insert = "INSERT INTO why_choose_us (title, description, icon, bg_color, icon_color, display_order) VALUES
         ('Price match guarantee', 'Amazing holiday package deals in Sri Lanka at un-matchable rates.', 'fas fa-tags', '#f3e5f5', '#8e24aa', 1),
-        ('Proven experience', 'The GPS Lanka Travels team comprises of locals who are well experienced in the field.', 'far fa-compass', '#e0f7fa', '#006064', 2),
+        ('Proven experience', 'The Travel with IS Tours team comprises locals who are well experienced in the field.', 'far fa-compass', '#e0f7fa', '#006064', 2),
         ('Personal consultant', 'Our friendly team of consultants offer personalized services to clients.', 'far fa-lightbulb', '#e8eaf6', '#1a237e', 3),
         ('24 Hour Ground Support', 'We are at your service 24 hours a day to help with any concerns.', 'fas fa-mobile-alt', '#e0f2f1', '#004d40', 4),
         ('Fair Booking Conditions', 'The bookings policy is prepared with utmost concern for our guests.', 'fas fa-passport', '#fce4ec', '#880e4f', 5),

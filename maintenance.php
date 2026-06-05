@@ -24,7 +24,7 @@ $bg_image = $settings['maintenance_bg_image'] ?? 'assets/hero.webp';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon - <?php echo htmlspecialchars($settings['site_title'] ?? 'GPS Lanka Travels'); ?></title>
+    <title>Coming Soon - <?php echo htmlspecialchars($settings['site_title'] ?? 'Travel with IS Tours'); ?></title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <!-- Favicon -->
@@ -237,7 +237,7 @@ $bg_image = $settings['maintenance_bg_image'] ?? 'assets/hero.webp';
 
 <div class="container">
     <div class="logo">
-        <img src="assets/images/logo/logo.png" alt="GPS Lanka Travels">
+        <img src="assets/images/logo/logo.png" alt="Travel with IS Tours">
     </div>
 
     <h1><?php echo htmlspecialchars($title); ?></h1>

@@ -141,7 +141,7 @@ $gallery_images = $pdo->query("SELECT * FROM gallery ORDER BY is_featured DESC, 
                 <div style="position: relative; overflow: hidden; border-radius: 8px; height: 250px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); group;">
                     <a href="<?php echo htmlspecialchars($img['image_path']); ?>" class="gallery-lightbox" data-caption="<?php echo htmlspecialchars($img['caption'] ?: $img['alt_text']); ?>">
                         <img src="<?php echo htmlspecialchars($img['image_path']); ?>" 
-                             alt="<?php echo htmlspecialchars($img['alt_text'] ?: 'GPS Lanka Travels Gallery Image'); ?>" 
+                             alt="<?php echo htmlspecialchars($img['alt_text'] ?: 'Travel with IS Tours Gallery Image'); ?>" 
                              title="<?php echo htmlspecialchars($img['caption'] ?: $img['alt_text']); ?>"
                              loading="lazy"
                              style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; cursor: pointer;">
@@ -251,3 +251,4 @@ endif; ?>
         });
     });
 </script>
+

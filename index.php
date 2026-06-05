@@ -6,12 +6,98 @@
 require_once 'config/db.php';
 ensure_tripadvisor_reviews_schema($pdo);
 $slides = $pdo->query("SELECT * FROM hero_slides ORDER BY display_order ASC")->fetchAll();
+
+function get_youtube_embed_url(?string $url): ?string
+{
+    if (!$url) {
+        return null;
+    }
+
+    $trimmed = trim($url);
+    $parts = parse_url($trimmed);
+    $host = strtolower($parts['host'] ?? '');
+
+    if (str_contains($host, 'youtu.be')) {
+        $video_id = trim($parts['path'] ?? '', '/');
+    } else {
+        parse_str($parts['query'] ?? '', $query);
+        $video_id = $query['v'] ?? '';
+
+        if (!$video_id && !empty($parts['path'])) {
+            $path_parts = array_values(array_filter(explode('/', trim($parts['path'], '/'))));
+            $embed_index = array_search('embed', $path_parts, true);
+            if ($embed_index !== false && isset($path_parts[$embed_index + 1])) {
+                $video_id = $path_parts[$embed_index + 1];
+            }
+        }
+    }
+
+    if (!$video_id) {
+        return null;
+    }
+
+    $params = http_build_query([
+        'autoplay' => 1,
+        'mute' => 1,
+        'controls' => 0,
+        'loop' => 1,
+        'playlist' => $video_id,
+        'playsinline' => 1,
+        'rel' => 0,
+        'modestbranding' => 1,
+        'enablejsapi' => 1,
+    ]);
+
+    return "https://www.youtube.com/embed/" . rawurlencode($video_id) . "?" . $params;
+}
 ?>
 
 <section class="hero-slider-container">
     <?php if (count($slides) > 0): ?>
         <?php foreach ($slides as $index => $slide): ?>
-        <div class="hero-slide <?php echo($index === 0) ? 'active' : ''; ?>" style="background-image: url('<?php echo htmlspecialchars($slide['image_path']); ?>');">
+        <?php
+        $slide_type = $slide['slide_type'] ?? 'image';
+        $is_youtube = $slide_type === 'youtube';
+        $is_video = $slide_type === 'video';
+        $is_embed = $slide_type === 'embed';
+        $background_style = !empty($slide['image_path']) ? "background-image: url('" . htmlspecialchars($slide['image_path']) . "');" : '';
+        $youtube_embed_url = $is_youtube ? get_youtube_embed_url($slide['video_url'] ?? '') : null;
+        ?>
+        <div class="hero-slide <?php echo($index === 0) ? 'active' : ''; ?>" style="<?php echo $background_style; ?>">
+            <?php if ($is_youtube && $youtube_embed_url): ?>
+                <div class="hero-slide-media">
+                    <iframe
+                        class="hero-slide-iframe"
+                        data-src="<?php echo htmlspecialchars($youtube_embed_url); ?>"
+                        title="<?php echo htmlspecialchars($slide['title'] ?: 'Hero video slide'); ?>"
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                        allowfullscreen
+                        referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                </div>
+            <?php elseif ($is_video && !empty($slide['video_url'])): ?>
+                <div class="hero-slide-media">
+                    <video
+                        class="hero-slide-video"
+                        muted
+                        loop
+                        playsinline
+                        preload="metadata"
+                        <?php echo !empty($slide['image_path']) ? 'poster="' . htmlspecialchars($slide['image_path']) . '"' : ''; ?>>
+                        <source src="<?php echo htmlspecialchars($slide['video_url']); ?>">
+                    </video>
+                </div>
+            <?php elseif ($is_embed && !empty($slide['video_url'])): ?>
+                <div class="hero-slide-media">
+                    <iframe
+                        class="hero-slide-iframe"
+                        data-src="<?php echo htmlspecialchars($slide['video_url']); ?>"
+                        title="<?php echo htmlspecialchars($slide['title'] ?: 'Hero embed slide'); ?>"
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                        allowfullscreen
+                        referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                </div>
+            <?php endif; ?>
+
             <div class="container hero-content">
                 <h1><?php echo htmlspecialchars($slide['title']); ?></h1>
                 <?php if ($slide['subtitle']): ?>
@@ -44,7 +130,7 @@ else: ?>
         <!-- Fallback Static Slide if DB is empty -->
         <div class="hero-slide active" style="background-image: url('https://placehold.co/1920x800?text=Please+Add+Slides+in+Admin');">
             <div class="container hero-content">
-                <h1>Welcome to GPS Lanka Travels</h1>
+                <h1>Welcome to Travel with IS Tours</h1>
                 <p>Please login to admin panel and add hero slides.</p>
                 <a href="admin/" class="hero-btn">Go to Admin</a>
             </div>
@@ -66,11 +152,15 @@ endif; ?>
         else currentSlide = index;
 
         // Remove active class
-        slides.forEach(slide => slide.classList.remove('active'));
+        slides.forEach(slide => {
+            slide.classList.remove('active');
+            syncSlideMedia(slide, false);
+        });
         dots.forEach(dot => dot.classList.remove('active'));
 
         // Add active class
         slides[currentSlide].classList.add('active');
+        syncSlideMedia(slides[currentSlide], true);
         if(dots.length > 0) dots[currentSlide].classList.add('active');
     }
 
@@ -95,7 +185,41 @@ endif; ?>
         startTimer();
     }
 
+    function syncSlideMedia(slide, isActive) {
+        if (!slide) return;
+
+        const videos = slide.querySelectorAll('video');
+        const iframes = slide.querySelectorAll('iframe[data-src]');
+
+        videos.forEach(video => {
+            if (isActive) {
+                const playPromise = video.play();
+                if (playPromise && typeof playPromise.catch === 'function') {
+                    playPromise.catch(() => {});
+                }
+            } else {
+                video.pause();
+                video.currentTime = 0;
+            }
+        });
+
+        iframes.forEach(iframe => {
+            if (isActive) {
+                if (!iframe.src) {
+                    iframe.src = iframe.dataset.src;
+                }
+            } else {
+                if (iframe.src) {
+                    iframe.src = '';
+                }
+            }
+        });
+    }
+
     // Initialize
+    if(totalSlides > 0) {
+        syncSlideMedia(slides[currentSlide], true);
+    }
     if(totalSlides > 1) {
         startTimer();
     }
@@ -109,13 +233,13 @@ endif; ?>
                 <?php
 $about_image_path = !empty($h_settings['about_image']) ? $h_settings['about_image'] : 'assets/images/about/about-home.png';
 ?>
-                <img src="<?php echo htmlspecialchars($about_image_path); ?>" alt="<?php echo htmlspecialchars(strip_tags($h_settings['about_title'] ?? 'About GPS Lanka Travels')); ?>">
+                <img src="<?php echo htmlspecialchars($about_image_path); ?>" alt="<?php echo htmlspecialchars(strip_tags($h_settings['about_title'] ?? 'About Travel with IS Tours')); ?>">
             </div>
             <div class="about-content">
                 <h2><?php echo !empty($h_settings['about_title']) ? nl2br(htmlspecialchars_decode($h_settings['about_title'])) : 'Magical Memories,<br>Bespoke experiences'; ?></h2>
                 
                 <?php
-$about_desc = $h_settings['about_description'] ?? "Welcome to GPS Lanka Travels, your key gateway to great Sri Lankan travel adventures. We are a trusted travel firm devoted to showing the very best of this island. From golden shores and misty hill country to ancient cities and wild nature, we craft great journeys capturing the true spirit, culture, and beauty of Sri Lanka. Built on a passion for travel excellence and personal care, we specialize in shaping seamless, highly memorable trips.\n\nWith deep local insight and strong industry ties, we offer bespoke vacations, heritage tours, and scenic routes. Whether seeking wildlife trips or quiet beach holidays, our reliable service standards and select partners ensure perfection. We believe travel must be fully meaningful, very comfortable, and highly enriching. Each custom itinerary we design reflects our solid commitment to quality, gentle care, and total authenticity. Discover Sri Lanka, experience absolute paradise, and travel with GPS Lanka Travels as your top travel partner today.";
+$about_desc = $h_settings['about_description'] ?? "Welcome to Travel with IS Tours, your gateway to unforgettable Sri Lankan travel experiences. We are a trusted local travel partner dedicated to showing you the very best of this island. From golden beaches and misty hill country to ancient cities and wildlife-rich landscapes, we craft journeys that reflect the spirit, culture, and beauty of Sri Lanka.\n\nWith deep local knowledge and personalized care, we create bespoke holidays, heritage journeys, scenic routes, and comfortable transport experiences tailored to each traveler. We believe travel should be meaningful, comfortable, and authentic. Every itinerary we design reflects our commitment to quality service, warm hospitality, and memorable adventures across Sri Lanka.";
 
 // Split the description by newlines to wrap in paragraphs
 $paragraphs = explode("\n", $about_desc);

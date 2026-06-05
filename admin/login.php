@@ -4,7 +4,7 @@ if (isset($_SESSION['user_id'])) {
     header("Location: dashboard.php");
     exit;
 }
-$login_site_title = 'GPS Lanka Travels';
+$login_site_title = 'Travel with IS Tours';
 // Try to include DB to get site title
 $db_path = __DIR__ . '/../config/db.php';
 if (file_exists($db_path)) {
@@ -196,7 +196,7 @@ endif; ?>
     </form>
     
     <div class="footer-text">
-        &copy; <?php echo date('Y'); ?> GPS Lanka Travels
+        &copy; <?php echo date('Y'); ?> Travel with IS Tours
     </div>
 </div>
 

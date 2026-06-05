@@ -262,10 +262,10 @@ endif; ?>
         <div class="perspective-box">
             <h3 style="font-family: 'Playfair Display', serif; font-size: 26px; color: #333; margin-top: 0; margin-bottom: 15px;">Our Perspective</h3>
             <p style="color: #555; font-size: 16px; line-height: 1.7; margin-bottom: 25px;">
-                At GPS Lanka Travels, we closely follow these developments to design travel experiences that align with current trends while maintaining high standards of comfort, safety, and authenticity. Our tours are crafted to reflect the evolving travel landscape and deliver exceptional value to our guests.
+                At Travel with IS Tours, we closely follow these developments to design travel experiences that align with current trends while maintaining high standards of comfort, safety, and authenticity. Our tours are crafted to reflect the evolving travel landscape and deliver exceptional value to our guests.
             </p>
             <p style="font-family: 'Playfair Display', serif; font-size: 22px; color: #ff1a4a; font-style: italic; margin: 0; font-weight: 600;">
-                "Discover Sri Lanka. Experience Paradise. Travel with GPS Lanka Travels."
+                "Discover Sri Lanka. Experience Paradise. Travel with IS Tours."
             </p>
         </div>
 

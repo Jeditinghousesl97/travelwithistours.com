@@ -279,7 +279,7 @@ endif; ?>
             </div>
             <div class="form-group">
                 <label class="form-label">Canonical URL / Base URL</label>
-                <input type="url" name="site_base_url" class="form-control" value="<?php echo htmlspecialchars($settings['site_base_url'] ?? ''); ?>" placeholder="https://www.gpslankatravels.com">
+                <input type="url" name="site_base_url" class="form-control" value="<?php echo htmlspecialchars($settings['site_base_url'] ?? ''); ?>" placeholder="https://www.travelwithistours.com">
                 <small style="color: #666;">Important for SEO to prevent duplicate content issues. Include http:// or https://</small>
             </div>
             <div class="form-group">
@@ -351,7 +351,7 @@ endif; ?>
             <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label">Sender Name (From Name)</label>
-                    <input type="text" name="email_from_name" class="form-control" value="<?php echo htmlspecialchars($settings['email_from_name'] ?? 'GPS Lanka Travels'); ?>">
+                    <input type="text" name="email_from_name" class="form-control" value="<?php echo htmlspecialchars($settings['email_from_name'] ?? 'Travel with IS Tours'); ?>">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Send Form Notifications To (Email)</label>
@@ -472,7 +472,7 @@ endif; ?>
             
             <div class="form-group">
                 <label class="form-label">Description (Paragraphs)</label>
-                <textarea name="about_description" id="about_description" class="form-control" rows="8"><?php echo htmlspecialchars($settings['about_description'] ?? "Welcome to GPS Lanka Travels, your key gateway to great Sri Lankan travel adventures. We are a trusted travel firm devoted to showing the very best of this island. From golden shores and misty hill country to ancient cities and wild nature, we craft great journeys capturing the true spirit, culture, and beauty of Sri Lanka. Built on a passion for travel excellence and personal care, we specialize in shaping seamless, highly memorable trips.\n\nWith deep local insight and strong industry ties, we offer bespoke vacations, heritage tours, and scenic routes. Whether seeking wildlife trips or quiet beach holidays, our reliable service standards and select partners ensure perfection. We believe travel must be fully meaningful, very comfortable, and highly enriching. Each custom itinerary we design reflects our solid commitment to quality, gentle care, and total authenticity. Discover Sri Lanka, experience absolute paradise, and travel with GPS Lanka Travels as your top travel partner today."); ?></textarea>
+                <textarea name="about_description" id="about_description" class="form-control" rows="8"><?php echo htmlspecialchars($settings['about_description'] ?? "Welcome to Travel with IS Tours, your gateway to unforgettable Sri Lankan travel experiences. We are a trusted local travel partner dedicated to showing you the very best of this island. From golden beaches and misty hill country to ancient cities and wildlife-rich landscapes, we craft journeys that reflect the spirit, culture, and beauty of Sri Lanka.\n\nWith deep local knowledge and personalized care, we create bespoke holidays, heritage journeys, scenic routes, and comfortable transport experiences tailored to each traveler. We believe travel should be meaningful, comfortable, and authentic. Every itinerary we design reflects our commitment to quality service, warm hospitality, and memorable adventures across Sri Lanka."); ?></textarea>
                 <small style="color: #666;">You can use the editor or plain text. In the frontend, paragraphs will be styled safely.</small>
             </div>
 
@@ -538,7 +538,7 @@ endif; ?>
         </div>
         <div class="form-group">
             <label class="form-label">Footer Copyright Text</label>
-            <input type="text" name="footer_copyright_text" class="form-control" value="<?php echo htmlspecialchars($settings['footer_copyright_text'] ?? '&copy; ' . date('Y') . ' GPS Lanka Travels. All Rights Reserved.'); ?>">
+            <input type="text" name="footer_copyright_text" class="form-control" value="<?php echo htmlspecialchars($settings['footer_copyright_text'] ?? '&copy; ' . date('Y') . ' Travel with IS Tours. All Rights Reserved.'); ?>">
             <small style="color: #666;">You can use HTML entities like &amp;copy; for standard symbols.</small>
         </div>
     </div>

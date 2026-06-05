@@ -37,13 +37,13 @@ catch (Exception $e) {
                 
                 <div style="margin-bottom: 25px;">
                     <h3><i class="fas fa-map-marker-alt" style="color: var(--accent-color); width: 30px;"></i> Address</h3>
-                    <p><?php echo nl2br(htmlspecialchars($settings['contact_address'] ?? 'No. 123, Galle Road, Colombo')); ?></p>
+                    <p><?php echo nl2br(htmlspecialchars($settings['contact_address'] ?? '#10/2, Mahatenagama, Elkaduwa, Matale, Sri Lanka.')); ?></p>
                 </div>
                 
                 <div style="margin-bottom: 25px;">
                     <h3><i class="fas fa-phone" style="color: var(--accent-color); width: 30px;"></i> Phone</h3>
                     <p>
-                        <?php echo htmlspecialchars($settings['contact_phone'] ?? '+94 77 123 4567'); ?><br>
+                        <?php echo htmlspecialchars($settings['contact_phone'] ?? '+94 77 584 0718'); ?><br>
                         <?php if (!empty($settings['contact_whatsapp'])): ?>
                             <i class="fab fa-whatsapp"></i> <?php echo htmlspecialchars($settings['contact_whatsapp']); ?>
                         <?php
@@ -53,7 +53,7 @@ endif; ?>
                 
                 <div style="margin-bottom: 25px;">
                     <h3><i class="fas fa-envelope" style="color: var(--accent-color); width: 30px;"></i> Email</h3>
-                    <p><?php echo htmlspecialchars($settings['contact_email'] ?? 'info@gpslankatravels.com'); ?></p>
+                    <p><?php echo htmlspecialchars($settings['contact_email'] ?? 'info@travelwithistours.com'); ?></p>
                 </div>
 
                 <div style="margin-top: 40px;">

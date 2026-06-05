@@ -13,7 +13,7 @@ if (!isset($_SESSION['user_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <?php
-$admin_site_title = 'GPS Lanka Travels';
+$admin_site_title = 'Travel with IS Tours';
 $admin_site_logo = '../assets/logo/logo.png';
 if (isset($pdo)) {
     try {
