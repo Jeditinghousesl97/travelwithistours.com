@@ -1,0 +1,10 @@
+# Error Pages
+ErrorDocument 404 /404.php
+
+# Prevent Directory Listing
+Options -Indexes
+
+# Security
+<Files ".htaccess">
+    Require all denied
+</Files>

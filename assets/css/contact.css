@@ -1,0 +1,124 @@
+/* Contact Page Styles */
+.contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 60px;
+    align-items: start;
+}
+
+.contact-form-container {
+    background: #fff;
+    padding: 50px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.contact-form-container h2 {
+    font-size: 28px;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+    font-size: 13px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 16px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background: #f9f9f9;
+    font-family: var(--body-font);
+    font-size: 15px;
+    color: #333;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+textarea.form-control {
+    height: 160px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.contact-form-container .btn {
+    width: 100%;
+    padding: 18px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    border-radius: 8px;
+    margin-top: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.contact-form-container .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 188, 212, 0.25);
+}
+
+/* Mobile Responsive for Contact Form */
+@media (max-width: 992px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .contact-form-container {
+        padding: 30px;
+    }
+
+    /* Mobile Header Optimization */
+    .contact-page-header,
+    .booking-page-header,
+    .services-page-header,
+    .all-tours-page-header {
+        height: 60vh !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: flex-end !important;
+        /* Bottom */
+        justify-content: center !important;
+        /* Center */
+    }
+
+    .contact-page-header .container,
+    .booking-page-header .container,
+    .services-page-header .container,
+    .all-tours-page-header .container {
+        padding-bottom: 60px;
+        /* Spacing from bottom */
+        width: 100%;
+    }
+}

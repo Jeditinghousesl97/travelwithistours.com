@@ -1,0 +1,59 @@
+/* Signature Tours Slider Styles */
+
+.sig-swiper-arrow {
+    color: #333 !important;
+    width: 40px !important;
+    height: 40px !important;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+    z-index: 10;
+}
+
+.sig-swiper-arrow:after {
+    font-size: 16px !important;
+    font-weight: bold;
+}
+
+.sig-swiper-arrow:hover {
+    color: var(--accent-color) !important;
+    transform: scale(1.1);
+}
+
+.swiper-button-prev.sig-swiper-arrow {
+    left: 0 !important;
+}
+
+.swiper-button-next.sig-swiper-arrow {
+    right: 0 !important;
+}
+
+/* Featured Ribbon */
+.featured-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    color: #333;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 20px;
+    z-index: 5;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.featured-badge i {
+    font-size: 10px;
+}
+
+@media (max-width: 768px) {
+    .sig-swiper-arrow {
+        display: none !important;
+    }
+}

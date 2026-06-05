@@ -1,0 +1,391 @@
+/* Tour Details Page CSS */
+
+:root {
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --color-pink-accent: #ffe4e6;
+    --color-blue-accent: #00bcd4;
+    --color-btn-pink: #ff1a4a;
+}
+
+/* 1. Header Section with Mask */
+.tour-header-section {
+    position: relative;
+    padding-bottom: 50px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.tour-header-image {
+    width: 100%;
+    height: 60vh;
+    min-height: 400px;
+    position: relative;
+    /* The unique organic/curved mask */
+    mask-image: radial-gradient(circle at 0% 0%, transparent 20%, black 21%);
+    -webkit-mask-image: radial-gradient(circle at 0% 0%, transparent 20%, black 21%);
+    /* This mask is tricky to get exactly like the design with pure CSS radial-gradient. 
+       Let's try a simpler curve or a custom SVG mask approach if needed.
+       For now, let's simpler curve: border-bottom-left-radius won't do the inverse curve.
+       Let's use a standard full width image for now and overlay the white curve.
+    */
+    background-size: cover;
+    background-position: center;
+}
+
+/* Better approach: Full width image container, white overlay with border-radius */
+.tour-hero-wrapper {
+    position: relative;
+    width: 100%;
+    height: 70vh;
+    overflow: hidden;
+}
+
+.tour-hero-bg {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+}
+
+.tour-hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    /* Adjust based on design curve */
+    height: 100%;
+    background: #fff;
+    /* Create the convex curve */
+    border-bottom-right-radius: 100% 50%;
+    pointer-events: none;
+    display: none;
+    /* Let's stick to standard layout first or just image */
+}
+
+/* Custom Header Layout closer to design:
+   Image on Left with curve? No, design shows top banner.
+   Actually design shows: Top Left is Image masked by a big circle?
+   Let's look at the design again. Top Left is image. Top Right is White space with Text.
+   The image has a convex curve on the bottom right.
+*/
+
+.tour-header-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    position: relative;
+    min-height: 500px;
+}
+
+.tour-header-img-col {
+    flex: 1;
+    min-width: 300px;
+    height: 500px;
+    position: relative;
+}
+
+.tour-header-img-col img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* The Mask: Bottom Right Convex */
+    mask-image: radial-gradient(circle at 100% 100%, transparent 30%, black 31%);
+    -webkit-mask-image: radial-gradient(circle at 100% 0%, transparent 0%, black 0%),
+        linear-gradient(to right, black 70%, transparent 0%);
+    /* Simplify: Border Radius */
+    border-bottom-right-radius: 50% 100%;
+}
+
+.tour-header-text-col {
+    flex: 1;
+    padding: 40px;
+    min-width: 300px;
+    text-align: left;
+}
+
+.tour-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.tour-subtitle {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 30px;
+    max-width: 500px;
+}
+
+.tour-meta-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-pill {
+    padding: 10px 25px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-blue {
+    background-color: var(--color-blue-accent);
+    color: #fff;
+}
+
+.btn-pink {
+    background-color: var(--color-btn-pink);
+    color: #fff;
+}
+
+
+/* 2. Icons Bar */
+.tour-icons-bar {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    padding: 40px 0;
+    border-bottom: 1px solid #f0f0f0;
+    flex-wrap: wrap;
+}
+
+.tour-icon-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: #555;
+    font-weight: 500;
+}
+
+.tour-icon-item i {
+    font-size: 20px;
+    color: #888;
+}
+
+
+/* 3. Itinerary Timeline */
+.itinerary-section {
+    padding: 60px 0;
+}
+
+.itinerary-item {
+    display: flex;
+    margin-bottom: 60px;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.day-bubble-col {
+    flex-shrink: 0;
+    width: 60px;
+}
+
+.day-bubble {
+    width: 60px;
+    height: 60px;
+    background-color: var(--color-blue-accent);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+    position: relative;
+    z-index: 2;
+}
+
+/* Connecting line */
+.itinerary-item:not(:last-child) .day-bubble::after {
+    content: '';
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: calc(100% + 60px);
+    /* Extend to next item */
+    background-color: #e0e0e0;
+    z-index: 1;
+}
+
+.itinerary-content {
+    flex-grow: 1;
+}
+
+.itinerary-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: var(--text-primary);
+}
+
+.itinerary-desc {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    margin-bottom: 25px;
+}
+
+.itinerary-images {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.itinerary-images img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+
+/* 4. Highlights & Map Grid */
+.highlights-map-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    padding: 60px 0;
+}
+
+.highlights-box {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+}
+
+.highlights-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+.highlights-box ul {
+    padding-left: 20px;
+    line-height: 2;
+    color: var(--text-secondary);
+}
+
+.map-box iframe {
+    width: 100%;
+    height: 400px;
+    border-radius: 12px;
+    border: none;
+}
+
+
+/* 5. Tips & FAQ Grid */
+.tips-faq-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    padding: 60px 0;
+}
+
+.tips-box {
+    background-color: var(--color-pink-accent);
+    /* Light Pink */
+    padding: 40px;
+    border-radius: 12px;
+}
+
+.tips-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.tips-content {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #555;
+}
+
+.faq-box {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+}
+
+/* Rich Text Content Styling */
+.highlights-box ul,
+.tips-content ul,
+.faq-box ul {
+    list-style-type: disc !important;
+    padding-left: 20px !important;
+    margin-bottom: 15px;
+}
+
+.highlights-box ol,
+.tips-content ol,
+.faq-box ol {
+    list-style-type: decimal !important;
+    padding-left: 20px !important;
+    margin-bottom: 15px;
+}
+
+.highlights-box li,
+.tips-content li,
+.faq-box li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.highlights-box p,
+.tips-content p,
+.faq-box p {
+    margin-bottom: 15px;
+}
+
+.faq-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tour-header-container {
+        flex-direction: column;
+    }
+
+    .tour-header-img-col {
+        width: 100%;
+        height: 300px;
+    }
+
+    .tour-header-img-col img {
+        border-bottom-right-radius: 0;
+    }
+
+    .itinerary-item {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .day-bubble::after {
+        display: none;
+    }
+
+    .itinerary-images {
+        grid-template-columns: 1fr;
+    }
+
+    .highlights-map-grid,
+    .tips-faq-grid {
+        grid-template-columns: 1fr;
+    }
+}

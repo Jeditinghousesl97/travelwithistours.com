@@ -1,0 +1,60 @@
+/* Journal Swiper Arrows */
+.journal-swiper-prev,
+.journal-swiper-next {
+    color: #333 !important;
+    width: 40px !important;
+    height: 40px !important;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+    z-index: 10;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.journal-swiper-prev:after,
+.journal-swiper-next:after {
+    font-family: swiper-icons;
+    font-size: 16px !important;
+    font-weight: bold;
+    text-transform: none !important;
+    letter-spacing: 0;
+    font-variant: initial;
+    line-height: 1;
+}
+
+.journal-swiper-prev:after {
+    content: 'prev';
+}
+
+.journal-swiper-next:after {
+    content: 'next';
+}
+
+.journal-swiper-prev:hover,
+.journal-swiper-next:hover {
+    color: var(--accent-color) !important;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.journal-swiper-prev {
+    left: 0 !important;
+}
+
+.journal-swiper-next {
+    right: 0 !important;
+}
+
+@media (max-width: 768px) {
+
+    .journal-swiper-prev,
+    .journal-swiper-next {
+        display: none !important;
+    }
+}

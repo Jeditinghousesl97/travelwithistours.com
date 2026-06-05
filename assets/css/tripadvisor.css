@@ -1,0 +1,265 @@
+/* Homepage TripAdvisor Section */
+.tripadvisor-home-section {
+    padding: 90px 0;
+    background: #fff;
+}
+
+.tripadvisor-home-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(260px, 1fr);
+    gap: 32px;
+    align-items: start;
+}
+
+.tripadvisor-column {
+    min-width: 0;
+}
+
+.tripadvisor-section-header {
+    margin-bottom: 28px;
+}
+
+.tripadvisor-section-header h2 {
+    font-family: var(--heading-font);
+    font-size: 42px;
+    line-height: 1.15;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+.tripadvisor-section-header p {
+    max-width: 720px;
+    margin: 0;
+    color: #666;
+}
+
+.tripadvisor-slider-shell {
+    min-width: 0;
+}
+
+.tripadvisor-review-card {
+    border: 1px solid #e8ecef;
+    border-radius: 18px;
+    background: #fff;
+    padding: 28px;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.tripadvisor-review-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.tripadvisor-reviewer {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.tripadvisor-avatar,
+.tripadvisor-avatar-placeholder {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.tripadvisor-avatar {
+    object-fit: cover;
+}
+
+.tripadvisor-avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eaf8f4;
+    color: #0f7b55;
+    font-weight: 700;
+    font-size: 20px;
+}
+
+.tripadvisor-reviewer-meta {
+    min-width: 0;
+}
+
+.tripadvisor-reviewer-meta h3 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    line-height: 1.4;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+    color: #222;
+}
+
+.tripadvisor-reviewer-meta p,
+.tripadvisor-trip-date {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #767676;
+}
+
+.tripadvisor-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tripadvisor-rating-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #d7efe4;
+}
+
+.tripadvisor-rating-dot.is-filled {
+    background: #34e0a1;
+}
+
+.tripadvisor-review-title {
+    margin: 0 0 12px;
+    font-family: var(--heading-font);
+    font-size: 26px;
+    line-height: 1.2;
+    color: #2d2d2d;
+}
+
+.tripadvisor-review-text {
+    margin: 0 0 18px;
+    color: #4f4f4f;
+    font-size: 15px;
+    line-height: 1.85;
+    word-break: break-word;
+}
+
+.tripadvisor-read-toggle {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent-color);
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.tripadvisor-review-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-top: 18px;
+    border-top: 1px solid #eef1f3;
+}
+
+.tripadvisor-review-link {
+    color: #0f7b55;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.tripadvisor-swiper {
+    padding-bottom: 44px;
+}
+
+.tripadvisor-swiper .swiper-pagination-bullet {
+    width: 10px;
+    height: 10px;
+    background: #c3d4d7;
+    opacity: 1;
+}
+
+.tripadvisor-swiper .swiper-pagination-bullet-active {
+    background: var(--accent-color);
+}
+
+.tripadvisor-widget-card {
+    border: 1px solid #e8ecef;
+    border-radius: 18px;
+    padding: 20px;
+    background: #fff;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.tripadvisor-widget-shell {
+    width: 100%;
+    overflow: hidden;
+}
+
+.tripadvisor-widget-shell > * {
+    max-width: 100%;
+}
+
+.tripadvisor-widget-shell iframe {
+    max-width: 100% !important;
+}
+
+.tripadvisor-widget-placeholder,
+.tripadvisor-review-empty {
+    border: 1px dashed #d3dade;
+    border-radius: 18px;
+    padding: 28px;
+    color: #6d757b;
+    background: #fbfcfd;
+}
+
+@media (max-width: 991px) {
+    .tripadvisor-home-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tripadvisor-section-header h2 {
+        font-size: 36px;
+    }
+}
+
+@media (max-width: 767px) {
+    .tripadvisor-home-section {
+        padding: 70px 0;
+    }
+
+    .tripadvisor-review-card {
+        padding: 22px;
+    }
+
+    .tripadvisor-review-top,
+    .tripadvisor-review-footer {
+        align-items: flex-start;
+    }
+
+    .tripadvisor-review-title {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 575px) {
+    .tripadvisor-home-section .container {
+        overflow: hidden;
+    }
+
+    .tripadvisor-home-grid {
+        gap: 22px;
+    }
+
+    .tripadvisor-review-card,
+    .tripadvisor-widget-card,
+    .tripadvisor-review-empty,
+    .tripadvisor-widget-placeholder {
+        border-radius: 14px;
+    }
+
+    .tripadvisor-section-header h2 {
+        font-size: 30px;
+    }
+}

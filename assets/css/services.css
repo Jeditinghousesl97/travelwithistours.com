@@ -1,0 +1,116 @@
+/* Services Section Updated for Swiper */
+.services-section {
+    padding: 80px 0;
+    position: relative;
+    background-color: #fff;
+}
+
+/* Card Styling (Retained) */
+.service-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    text-align: center;
+    border: 1px solid #f0f0f0;
+    height: 100%;
+    /* Ensure consistent height in swiper */
+    display: flex;
+    flex-direction: column;
+}
+
+.service-image {
+    width: 100%;
+    height: 250px;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.service-content {
+    padding: 30px 20px;
+    flex-grow: 1;
+    /* Push footer down if we had one */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.service-content h3 {
+    font-family: var(--hero-font), serif;
+    font-size: 22px;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.service-content p {
+    font-size: 14px;
+    color: #777;
+    line-height: 1.6;
+    margin-bottom: 25px;
+    flex-grow: 1;
+    /* Pushes button to bottom if texts align */
+}
+
+/* Read More Button */
+.read-more-btn {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--accent-color);
+    /* Blue/Cyan */
+    letter-spacing: 1px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.3s, gap 0.3s;
+    margin-top: auto;
+    /* Push to bottom */
+}
+
+.read-more-btn:hover {
+    color: #008ba3;
+    gap: 8px;
+}
+
+/* Custom Swiper Arrow Styling */
+.svc-swiper-arrow {
+    color: #333 !important;
+    width: 40px !important;
+    height: 40px !important;
+    background: none;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.svc-swiper-arrow:after {
+    font-size: 20px !important;
+    /* Smaller arrow size */
+    font-weight: bold;
+}
+
+.svc-swiper-arrow:hover {
+    color: var(--accent-color) !important;
+    transform: scale(1.1);
+}
+
+/* Positioning handled by wrapper in PHP, but let's refine */
+.swiper-button-prev {
+    left: 0 !important;
+}
+
+.swiper-button-next {
+    right: 0 !important;
+}
+
+@media (max-width: 768px) {
+    .swiper-wrapper-container {
+        padding: 0 !important;
+        /* Remove arrow padding on mobile */
+    }
+
+    .svc-swiper-arrow {
+        display: none !important;
+        /* Hide arrows on mobile, swipe only */
+    }
+}
