@@ -87,7 +87,7 @@ function get_youtube_embed_url(?string $url): ?string
                     </video>
                 </div>
             <?php elseif ($is_embed && !empty($slide['video_url'])): ?>
-                <div class="hero-slide-media">
+                <div class="hero-slide-media hero-slide-media-embed">
                     <iframe
                         class="hero-slide-iframe"
                         data-src="<?php echo htmlspecialchars($slide['video_url']); ?>"
