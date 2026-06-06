@@ -1,6 +1,8 @@
 <?php
 
 require_once 'config/db.php';
+require_once 'includes/short_videos.php';
+ensure_short_videos_schema($pdo);
 
 include 'includes/header.php';
 
@@ -33,6 +35,71 @@ include 'includes/header.php';
         }
     }
 </style>
+
+<?php
+$short_videos = [];
+try {
+    $short_videos = $pdo->query("SELECT * FROM short_videos WHERE is_active = 1 ORDER BY display_order ASC, created_at DESC")->fetchAll();
+}
+catch (Exception $e) {
+    $short_videos = [];
+}
+?>
+
+<?php if (count($short_videos) > 0): ?>
+<section class="short-videos-section">
+    <div class="container">
+        <div class="short-videos-header">
+            <span class="short-videos-kicker">Short Moments</span>
+            <h2 class="short-videos-title">A Quick Glimpse Of Sri Lanka</h2>
+            <p class="short-videos-description">Swipe through short travel clips captured across the island, from scenic train rides to coastal moments and hill-country views.</p>
+        </div>
+
+        <div class="short-videos-slider-shell">
+            <div class="swiper short-videos-swiper">
+                <div class="swiper-wrapper">
+                    <?php foreach ($short_videos as $video): ?>
+                        <div class="swiper-slide">
+                            <article class="short-video-card">
+                                <div class="short-video-frame">
+                                    <span class="short-video-badge"><i class="fas fa-play"></i> Short Clip</span>
+                                    <video
+                                        class="js-short-video"
+                                        muted
+                                        loop
+                                        playsinline
+                                        preload="metadata"
+                                        <?php echo !empty($video['poster_path']) ? 'poster="' . htmlspecialchars($video['poster_path']) . '"' : ''; ?>>
+                                        <source src="<?php echo htmlspecialchars($video['video_path']); ?>">
+                                    </video>
+                                </div>
+                                <?php
+                                $short_video_title = trim((string) ($video['title'] ?? ''));
+                                $short_video_caption = trim((string) ($video['caption'] ?? ''));
+                                ?>
+                                <?php if ($short_video_title !== '' || $short_video_caption !== ''): ?>
+                                    <div class="short-video-content">
+                                        <?php if ($short_video_title !== ''): ?>
+                                            <h3><?php echo htmlspecialchars($short_video_title); ?></h3>
+                                        <?php endif; ?>
+                                        <?php if ($short_video_caption !== ''): ?>
+                                            <p><?php echo htmlspecialchars($short_video_caption); ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </article>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="swiper-button-prev short-videos-arrow short-videos-prev"></div>
+            <div class="swiper-button-next short-videos-arrow short-videos-next"></div>
+            <div class="swiper-pagination short-videos-pagination"></div>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
 
 
 
@@ -86,44 +153,6 @@ endif; ?>
             <div class="swiper-pagination"></div>
         </div>
     </div>
-
-
-<!-- Reviews Platform Slider -->
-<section style="padding: 60px 0; background: #fff; border-bottom: 1px solid #f9f9f9;">
-    <div class="container">
-        <div class="swiper reviews-swiper">
-            <div class="swiper-wrapper" style="align-items: center;">
-                <?php
-// Fetch Review Partners
-$partners = [];
-try {
-    $partners_stmt = $pdo->query("SELECT * FROM partners ORDER BY created_at ASC");
-    $partners = $partners_stmt->fetchAll();
-}
-catch (Exception $e) {
-// Table might not exist yet
-}
-
-if (count($partners) > 0):
-    foreach ($partners as $partner):
-?>
-                <div class="swiper-slide" style="text-align: center;">
-                    <a href="<?php echo htmlspecialchars($partner['link']); ?>" target="_blank" style="opacity: 1; transition: 0.3s; display: inline-block;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-                        <img src="<?php echo htmlspecialchars($partner['logo']); ?>" alt="<?php echo htmlspecialchars($partner['name']); ?>" style="height: 80px; width: auto; max-width: 220px; object-fit: contain; filter: grayscale(0%); transition: filter 0.3s;" onmouseover="this.style.filter='grayscale(100%)'" onmouseout="this.style.filter='grayscale(0%)'">
-                    </a>
-                </div>
-                <?php
-    endforeach;
-else:
-    // Fallback to placeholder if no partners
-?>
-                <div class="swiper-slide" style="text-align: center; color: #999; font-size: 14px;">Add Review Partners in Admin Panel</div>
-                <?php
-endif; ?>
-            </div>
-        </div>
-    </div>
-</section>
 
 
 <!-- Gallery Section -->
@@ -200,6 +229,88 @@ endif; ?>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const shortVideosSwiperElement = document.querySelector('.short-videos-swiper');
+        if (shortVideosSwiperElement) {
+            const equalizeShortVideoCardHeights = () => {
+                const cards = shortVideosSwiperElement.querySelectorAll('.short-video-card');
+                let tallestCardHeight = 0;
+
+                cards.forEach((card) => {
+                    card.style.minHeight = '';
+                });
+
+                cards.forEach((card) => {
+                    tallestCardHeight = Math.max(tallestCardHeight, card.offsetHeight);
+                });
+
+                cards.forEach((card) => {
+                    card.style.minHeight = `${tallestCardHeight}px`;
+                });
+            };
+
+            const syncShortVideosPlayback = (swiperInstance) => {
+                const allVideos = swiperInstance.el.querySelectorAll('.js-short-video');
+                allVideos.forEach((video) => {
+                    video.pause();
+                    video.currentTime = 0;
+                });
+
+                const activeSlides = Array.from(swiperInstance.slides).filter((slide) => slide.classList.contains('swiper-slide-active'));
+                activeSlides.forEach((slide) => {
+                    const video = slide.querySelector('.js-short-video');
+                    if (!video) {
+                        return;
+                    }
+
+                    const playPromise = video.play();
+                    if (playPromise && typeof playPromise.catch === 'function') {
+                        playPromise.catch(() => {});
+                    }
+                });
+            };
+
+            const shortVideosSwiper = new Swiper('.short-videos-swiper', {
+                slidesPerView: 1.15,
+                spaceBetween: 20,
+                loop: true,
+                centeredSlides: false,
+                autoplay: {
+                    delay: 4500,
+                    disableOnInteraction: false,
+                },
+                navigation: {
+                    nextEl: '.short-videos-next',
+                    prevEl: '.short-videos-prev',
+                },
+                pagination: {
+                    el: '.short-videos-pagination',
+                    clickable: true,
+                },
+                breakpoints: {
+                    640: { slidesPerView: 1.6, spaceBetween: 20 },
+                    768: { slidesPerView: 2.2, spaceBetween: 24 },
+                    1024: { slidesPerView: 3, spaceBetween: 28 },
+                },
+                on: {
+                    init() {
+                        equalizeShortVideoCardHeights();
+                        syncShortVideosPlayback(this);
+                    },
+                    slideChangeTransitionEnd() {
+                        syncShortVideosPlayback(this);
+                    },
+                    resize() {
+                        equalizeShortVideoCardHeights();
+                    },
+                }
+            });
+
+            window.addEventListener('load', equalizeShortVideoCardHeights);
+            window.addEventListener('resize', equalizeShortVideoCardHeights);
+            shortVideosSwiperElement.addEventListener('mouseenter', () => shortVideosSwiper.autoplay.stop());
+            shortVideosSwiperElement.addEventListener('mouseleave', () => shortVideosSwiper.autoplay.start());
+        }
+
         if(document.querySelector('.testimonials-swiper')) {
             new Swiper('.testimonials-swiper', {
                 slidesPerView: 1,
@@ -219,23 +330,6 @@ endif; ?>
             });
         }
 
-        if(document.querySelector('.reviews-swiper')) {
-            new Swiper('.reviews-swiper', {
-                slidesPerView: 2,
-                spaceBetween: 30,
-                centeredSlides: true,
-                loop: true,
-                autoplay: {
-                    delay: 2500,
-                    disableOnInteraction: false,
-                },
-                breakpoints: {
-                    640: { slidesPerView: 3, centeredSlides: true },
-                    768: { slidesPerView: 4, centeredSlides: false },
-                    1024: { slidesPerView: 5, centeredSlides: false },
-                }
-            });
-        }
     });
 </script>
 

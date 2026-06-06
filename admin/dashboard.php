@@ -1,5 +1,7 @@
 <?php
 require_once '../config/db.php';
+require_once '../includes/short_videos.php';
+ensure_short_videos_schema($pdo);
 include 'includes/header.php';
 
 // Fetch Counts
@@ -13,6 +15,7 @@ try {
         'gallery' => ['count' => $pdo->query("SELECT COUNT(*) FROM gallery")->fetchColumn(), 'label' => 'Gallery Images', 'icon' => 'fa-images', 'color' => '#e83e8c', 'bg' => '#fce4ec', 'link' => 'gallery.php'],
         'partners' => ['count' => $pdo->query("SELECT COUNT(*) FROM partners")->fetchColumn(), 'label' => 'Partners', 'icon' => 'fa-handshake', 'color' => '#fd7e14', 'bg' => '#fff3e0', 'link' => 'partners.php'],
         'hero_slides' => ['count' => $pdo->query("SELECT COUNT(*) FROM hero_slides")->fetchColumn(), 'label' => 'Hero Slides', 'icon' => 'fa-layer-group', 'color' => '#6c757d', 'bg' => '#e9ecef', 'link' => 'slider.php'],
+        'short_videos' => ['count' => $pdo->query("SELECT COUNT(*) FROM short_videos")->fetchColumn(), 'label' => 'Short Videos', 'icon' => 'fa-film', 'color' => '#20c997', 'bg' => '#e8fff7', 'link' => 'short-videos.php'],
     ];
 }
 catch (Exception $e) {
@@ -273,6 +276,9 @@ endif; ?>
     </a>
     <a href="gallery.php" class="quick-action-btn">
         <i class="fas fa-camera" style="color: #e83e8c;"></i> Upload Photos
+    </a>
+    <a href="short-videos.php" class="quick-action-btn">
+        <i class="fas fa-film" style="color: #20c997;"></i> Upload Short Videos
     </a>
     <a href="settings.php" class="quick-action-btn">
         <i class="fas fa-cog" style="color: #6c757d;"></i> Settings

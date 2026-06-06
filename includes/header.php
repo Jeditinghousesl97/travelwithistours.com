@@ -117,7 +117,7 @@ endif; ?>
         }
         
          .top-bar .center img {
-            height: 100px; /* Increased Size */
+            height: 125px;
             width: auto;
             display: block;
             margin: 0 auto;

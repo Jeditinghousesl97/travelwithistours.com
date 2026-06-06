@@ -25,6 +25,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <li><a href="tripadvisor-reviews.php" class="<?php echo $current_page == 'tripadvisor-reviews.php' ? 'active' : ''; ?>"><i class="fab fa-tripadvisor"></i> TripAdvisor Reviews</a></li>
             <li><a href="partners.php" class="<?php echo $current_page == 'partners.php' ? 'active' : ''; ?>"><i class="fas fa-handshake"></i> Partners</a></li>
             <li><a href="slider.php" class="<?php echo $current_page == 'slider.php' ? 'active' : ''; ?>"><i class="fas fa-images"></i> Homepage Slider</a></li>
+            <li><a href="short-videos.php" class="<?php echo $current_page == 'short-videos.php' ? 'active' : ''; ?>"><i class="fas fa-film"></i> Short Videos</a></li>
             <li><a href="why-choose-us.php" class="<?php echo $current_page == 'why-choose-us.php' ? 'active' : ''; ?>"><i class="fas fa-award"></i> Why Choose Us</a></li>
             <li><a href="settings.php" class="<?php echo $current_page == 'settings.php' ? 'active' : ''; ?>"><i class="fas fa-cog"></i> Settings</a></li>
             <li><a href="clear_cache.php" class="<?php echo $current_page == 'clear_cache.php' ? 'active' : ''; ?>" style="color: #ff9800;"><i class="fas fa-broom"></i> Purge Cache</a></li>

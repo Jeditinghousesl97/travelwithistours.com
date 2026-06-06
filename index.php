@@ -1,10 +1,12 @@
 <?php include 'includes/header.php'; ?>
 <?php require_once 'includes/tripadvisor_reviews.php'; ?>
+<?php require_once 'includes/short_videos.php'; ?>
 
 <!-- Hero Slider Section -->
 <?php
 require_once 'config/db.php';
 ensure_tripadvisor_reviews_schema($pdo);
+ensure_short_videos_schema($pdo);
 $slides = $pdo->query("SELECT * FROM hero_slides ORDER BY display_order ASC")->fetchAll();
 
 function get_youtube_embed_url(?string $url): ?string
@@ -73,6 +75,7 @@ function get_embed_media_url(?string $url): ?string
         'loop' => '1',
         'muted' => '1',
         'playsinline' => '1',
+        'preload' => 'auto',
     ];
 
     if (str_contains($host, 'cloudflarestream.com')) {
@@ -80,6 +83,7 @@ function get_embed_media_url(?string $url): ?string
             'autoplay' => 'true',
             'loop' => 'true',
             'muted' => 'true',
+            'preload' => 'auto',
             'controls' => 'false',
         ];
     } elseif (str_contains($host, 'vimeo.com')) {
@@ -89,6 +93,7 @@ function get_embed_media_url(?string $url): ?string
             'muted' => '1',
             'background' => '1',
             'autopause' => '0',
+            'preload' => 'auto',
         ];
     }
 
@@ -121,6 +126,7 @@ function get_embed_media_url(?string $url): ?string
         $is_youtube = $slide_type === 'youtube';
         $is_video = $slide_type === 'video';
         $is_embed = $slide_type === 'embed';
+        $is_initial_slide = $index === 0;
         $background_style = !empty($slide['image_path']) ? "background-image: url('" . htmlspecialchars($slide['image_path']) . "');" : '';
         $youtube_embed_url = $is_youtube ? get_youtube_embed_url($slide['video_url'] ?? '') : null;
         $generic_embed_url = $is_embed ? get_embed_media_url($slide['video_url'] ?? '') : null;
@@ -130,9 +136,11 @@ function get_embed_media_url(?string $url): ?string
                 <div class="hero-slide-media">
                     <iframe
                         class="hero-slide-iframe"
+                        <?php echo $is_initial_slide ? 'src="' . htmlspecialchars($youtube_embed_url) . '"' : ''; ?>
                         data-src="<?php echo htmlspecialchars($youtube_embed_url); ?>"
                         title="<?php echo htmlspecialchars($slide['title'] ?: 'Hero video slide'); ?>"
-                        allow="autoplay; encrypted-media; picture-in-picture"
+                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        loading="<?php echo $is_initial_slide ? 'eager' : 'lazy'; ?>"
                         allowfullscreen
                         referrerpolicy="strict-origin-when-cross-origin"></iframe>
                 </div>
@@ -152,9 +160,11 @@ function get_embed_media_url(?string $url): ?string
                 <div class="hero-slide-media hero-slide-media-embed">
                     <iframe
                         class="hero-slide-iframe"
+                        <?php echo $is_initial_slide ? 'src="' . htmlspecialchars($generic_embed_url) . '"' : ''; ?>
                         data-src="<?php echo htmlspecialchars($generic_embed_url); ?>"
                         title="<?php echo htmlspecialchars($slide['title'] ?: 'Hero embed slide'); ?>"
-                        allow="autoplay; encrypted-media; picture-in-picture"
+                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        loading="<?php echo $is_initial_slide ? 'eager' : 'lazy'; ?>"
                         allowfullscreen
                         referrerpolicy="strict-origin-when-cross-origin"></iframe>
                 </div>
@@ -570,7 +580,7 @@ endif; ?>
 </section>
 
 <!-- Exclusive Customized Tour Section -->
-<section style="padding: 100px 0; background: #fff; position: relative; overflow: hidden; text-align: center;">
+<section style="padding: 100px 0; background: #fff; position: relative; overflow: visible; text-align: center;">
     <div class="container" style="position: relative; z-index: 2;">
         <h3 style="font-family: 'Playfair Display', serif; font-size: 24px; margin-bottom: 5px; color: #000; font-weight: 400;">Looking for an</h3>
         <h2 style="font-family: 'Playfair Display', serif; font-size: 52px; margin: 0 0 10px 0; color: #333; line-height: 1.2;">Exclusive Customized Tour?</h2>
@@ -582,16 +592,27 @@ endif; ?>
     </div>
     
     <!-- Decorative Image (Right Side) -->
-    <div style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 450px; max-width: 40%; pointer-events: none; z-index: 1;">
+    <div class="exclusive-tour-art-mobile" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); width: min(520px, 42vw); pointer-events: none; z-index: 1;">
         <!-- User to add image here -->
-        <img src="assets/images/custom-tour-art.png" alt="Customized Tour Art" style="width: 100%; height: auto; object-fit: contain;">
+        <img src="assets/images/custom-tour-art.png" alt="Customized Tour Art" style="width: 100%; height: auto; object-fit: contain; display: block;">
     </div>
 </section>
+
+<style>
+    @media (max-width: 768px) {
+        .exclusive-tour-art-mobile {
+            right: 12px !important;
+            top: 18px !important;
+            transform: none !important;
+            width: min(180px, 42vw) !important;
+        }
+    }
+</style>
 
 <!-- Reviews Platform Slider -->
 <section style="padding: 60px 0; background: #fff; border-bottom: 1px solid #f9f9f9;">
     <div class="container">
-        <div class="swiper reviews-swiper">
+        <div class="swiper reviews-swiper" style="padding-bottom: 40px;">
             <div class="swiper-wrapper" style="align-items: center;">
                 <?php
 // Fetch Review Partners
@@ -604,8 +625,13 @@ catch (Exception $e) {
 // Table might not exist yet
 }
 
-if (count($partners) > 0):
-    foreach ($partners as $partner):
+$reviews_slider_items = $partners;
+if (count($reviews_slider_items) > 0 && count($reviews_slider_items) < 6) {
+    $reviews_slider_items = array_merge($reviews_slider_items, $partners, $partners);
+}
+
+if (count($reviews_slider_items) > 0):
+    foreach ($reviews_slider_items as $partner):
 ?>
                 <div class="swiper-slide" style="text-align: center;">
                     <a href="<?php echo htmlspecialchars($partner['link']); ?>" target="_blank" style="opacity: 1; transition: 0.3s; display: inline-block;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
@@ -621,9 +647,18 @@ else:
                 <?php
 endif; ?>
             </div>
+            <div class="swiper-pagination reviews-swiper-pagination"></div>
         </div>
     </div>
 </section>
+
+<style>
+    .reviews-swiper-pagination.swiper-pagination {
+        position: static !important;
+        margin-top: 16px;
+        text-align: center;
+    }
+</style>
 
 <!-- Destinations / Blog Section -->
 <section style="padding: 100px 0; background-color: #ffffffff; position: relative;">
@@ -801,6 +836,71 @@ $tripadvisor_widget_embed = trim((string) ($h_settings['tripadvisor_widget_embed
 </section>
 <?php endif; ?>
 
+<?php
+$short_videos = [];
+try {
+    $short_videos = $pdo->query("SELECT * FROM short_videos WHERE is_active = 1 ORDER BY display_order ASC, created_at DESC")->fetchAll();
+}
+catch (Exception $e) {
+    $short_videos = [];
+}
+?>
+
+<?php if (count($short_videos) > 0): ?>
+<section class="short-videos-section">
+    <div class="container">
+        <div class="short-videos-header">
+            <span class="short-videos-kicker">Short Moments</span>
+            <h2 class="short-videos-title">A Quick Glimpse Of Sri Lanka</h2>
+            <p class="short-videos-description">Swipe through short travel clips captured across the island, from scenic train rides to coastal moments and hill-country views.</p>
+        </div>
+
+        <div class="short-videos-slider-shell">
+            <div class="swiper short-videos-swiper">
+                <div class="swiper-wrapper">
+                    <?php foreach ($short_videos as $video): ?>
+                        <div class="swiper-slide">
+                            <article class="short-video-card">
+                                <div class="short-video-frame">
+                                    <span class="short-video-badge"><i class="fas fa-play"></i> Short Clip</span>
+                                    <video
+                                        class="js-short-video"
+                                        muted
+                                        loop
+                                        playsinline
+                                        preload="metadata"
+                                        <?php echo !empty($video['poster_path']) ? 'poster="' . htmlspecialchars($video['poster_path']) . '"' : ''; ?>>
+                                        <source src="<?php echo htmlspecialchars($video['video_path']); ?>">
+                                    </video>
+                                </div>
+                                <?php
+                                $short_video_title = trim((string) ($video['title'] ?? ''));
+                                $short_video_caption = trim((string) ($video['caption'] ?? ''));
+                                ?>
+                                <?php if ($short_video_title !== '' || $short_video_caption !== ''): ?>
+                                    <div class="short-video-content">
+                                        <?php if ($short_video_title !== ''): ?>
+                                            <h3><?php echo htmlspecialchars($short_video_title); ?></h3>
+                                        <?php endif; ?>
+                                        <?php if ($short_video_caption !== ''): ?>
+                                            <p><?php echo htmlspecialchars($short_video_caption); ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </article>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="swiper-button-prev short-videos-arrow short-videos-prev"></div>
+            <div class="swiper-button-next short-videos-arrow short-videos-next"></div>
+            <div class="swiper-pagination short-videos-pagination"></div>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
 <!-- Featured Gallery Section (Masonry) -->
 <section style="padding: 100px 0; background: #fff;">
     <div class="container">
@@ -902,16 +1002,23 @@ endif;
 
     // Initialize Reviews Swiper
     const reviewsSwiper = new Swiper('.reviews-swiper', {
-        slidesPerView: 2,
-        spaceBetween: 30,
+        slidesPerView: 1,
+        spaceBetween: 24,
         loop: true,
+        loopAdditionalSlides: 6,
+        watchOverflow: false,
+        centeredSlides: true,
+        pagination: {
+            el: '.reviews-swiper-pagination',
+            clickable: true,
+        },
         autoplay: {
             delay: 3000,
             disableOnInteraction: false,
         },
         breakpoints: {
-            576: { slidesPerView: 3, spaceBetween: 40 },
-            768: { slidesPerView: 4, spaceBetween: 50 },
+            576: { slidesPerView: 2, spaceBetween: 32, centeredSlides: false },
+            768: { slidesPerView: 4, spaceBetween: 50, centeredSlides: false },
             1200: { slidesPerView: 4, spaceBetween: 60 },
         }
     });
@@ -931,6 +1038,88 @@ endif;
             1024: { slidesPerView: 3 },
         }
     });
+
+    const shortVideosSwiperElement = document.querySelector('.short-videos-swiper');
+    if (shortVideosSwiperElement) {
+        const equalizeShortVideoCardHeights = () => {
+            const cards = shortVideosSwiperElement.querySelectorAll('.short-video-card');
+            let tallestCardHeight = 0;
+
+            cards.forEach((card) => {
+                card.style.minHeight = '';
+            });
+
+            cards.forEach((card) => {
+                tallestCardHeight = Math.max(tallestCardHeight, card.offsetHeight);
+            });
+
+            cards.forEach((card) => {
+                card.style.minHeight = `${tallestCardHeight}px`;
+            });
+        };
+
+        const syncShortVideosPlayback = (swiperInstance) => {
+            const allVideos = swiperInstance.el.querySelectorAll('.js-short-video');
+            allVideos.forEach((video) => {
+                video.pause();
+                video.currentTime = 0;
+            });
+
+            const activeSlides = Array.from(swiperInstance.slides).filter((slide) => slide.classList.contains('swiper-slide-active'));
+            activeSlides.forEach((slide) => {
+                const video = slide.querySelector('.js-short-video');
+                if (!video) {
+                    return;
+                }
+
+                const playPromise = video.play();
+                if (playPromise && typeof playPromise.catch === 'function') {
+                    playPromise.catch(() => {});
+                }
+            });
+        };
+
+        const shortVideosSwiper = new Swiper('.short-videos-swiper', {
+            slidesPerView: 1.15,
+            spaceBetween: 20,
+            loop: true,
+            centeredSlides: false,
+            autoplay: {
+                delay: 4500,
+                disableOnInteraction: false,
+            },
+            navigation: {
+                nextEl: '.short-videos-next',
+                prevEl: '.short-videos-prev',
+            },
+            pagination: {
+                el: '.short-videos-pagination',
+                clickable: true,
+            },
+            breakpoints: {
+                640: { slidesPerView: 1.6, spaceBetween: 20 },
+                768: { slidesPerView: 2.2, spaceBetween: 24 },
+                1024: { slidesPerView: 3, spaceBetween: 28 },
+            },
+            on: {
+                init() {
+                    equalizeShortVideoCardHeights();
+                    syncShortVideosPlayback(this);
+                },
+                slideChangeTransitionEnd() {
+                    syncShortVideosPlayback(this);
+                },
+                resize() {
+                    equalizeShortVideoCardHeights();
+                },
+            }
+        });
+
+        window.addEventListener('load', equalizeShortVideoCardHeights);
+        window.addEventListener('resize', equalizeShortVideoCardHeights);
+        shortVideosSwiperElement.addEventListener('mouseenter', () => shortVideosSwiper.autoplay.stop());
+        shortVideosSwiperElement.addEventListener('mouseleave', () => shortVideosSwiper.autoplay.start());
+    }
 
     const tripadvisorSwiperElement = document.querySelector('.tripadvisor-swiper');
     if (tripadvisorSwiperElement) {
