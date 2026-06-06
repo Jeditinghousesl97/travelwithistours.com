@@ -50,6 +50,67 @@ function get_youtube_embed_url(?string $url): ?string
 
     return "https://www.youtube.com/embed/" . rawurlencode($video_id) . "?" . $params;
 }
+
+function get_embed_media_url(?string $url): ?string
+{
+    if (!$url) {
+        return null;
+    }
+
+    $trimmed = trim($url);
+    $parts = parse_url($trimmed);
+
+    if ($parts === false) {
+        return $trimmed;
+    }
+
+    $host = strtolower($parts['host'] ?? '');
+    $existing_query = [];
+    parse_str($parts['query'] ?? '', $existing_query);
+
+    $provider_params = [
+        'autoplay' => '1',
+        'loop' => '1',
+        'muted' => '1',
+        'playsinline' => '1',
+    ];
+
+    if (str_contains($host, 'cloudflarestream.com')) {
+        $provider_params = [
+            'autoplay' => 'true',
+            'loop' => 'true',
+            'muted' => 'true',
+            'controls' => 'false',
+        ];
+    } elseif (str_contains($host, 'vimeo.com')) {
+        $provider_params = [
+            'autoplay' => '1',
+            'loop' => '1',
+            'muted' => '1',
+            'background' => '1',
+            'autopause' => '0',
+        ];
+    }
+
+    $query = http_build_query(array_merge($existing_query, $provider_params));
+    $rebuilt_url = ($parts['scheme'] ?? 'https') . '://' . ($parts['host'] ?? '');
+
+    if (!empty($parts['port'])) {
+        $rebuilt_url .= ':' . $parts['port'];
+    }
+
+    $rebuilt_url .= $parts['path'] ?? '';
+
+    if ($query !== '') {
+        $rebuilt_url .= '?' . $query;
+    }
+
+    if (!empty($parts['fragment'])) {
+        $rebuilt_url .= '#' . $parts['fragment'];
+    }
+
+    return $rebuilt_url;
+}
 ?>
 
 <section class="hero-slider-container">
@@ -62,6 +123,7 @@ function get_youtube_embed_url(?string $url): ?string
         $is_embed = $slide_type === 'embed';
         $background_style = !empty($slide['image_path']) ? "background-image: url('" . htmlspecialchars($slide['image_path']) . "');" : '';
         $youtube_embed_url = $is_youtube ? get_youtube_embed_url($slide['video_url'] ?? '') : null;
+        $generic_embed_url = $is_embed ? get_embed_media_url($slide['video_url'] ?? '') : null;
         ?>
         <div class="hero-slide <?php echo($index === 0) ? 'active' : ''; ?>" style="<?php echo $background_style; ?>">
             <?php if ($is_youtube && $youtube_embed_url): ?>
@@ -86,11 +148,11 @@ function get_youtube_embed_url(?string $url): ?string
                         <source src="<?php echo htmlspecialchars($slide['video_url']); ?>">
                     </video>
                 </div>
-            <?php elseif ($is_embed && !empty($slide['video_url'])): ?>
+            <?php elseif ($is_embed && $generic_embed_url): ?>
                 <div class="hero-slide-media hero-slide-media-embed">
                     <iframe
                         class="hero-slide-iframe"
-                        data-src="<?php echo htmlspecialchars($slide['video_url']); ?>"
+                        data-src="<?php echo htmlspecialchars($generic_embed_url); ?>"
                         title="<?php echo htmlspecialchars($slide['title'] ?: 'Hero embed slide'); ?>"
                         allow="autoplay; encrypted-media; picture-in-picture"
                         allowfullscreen
