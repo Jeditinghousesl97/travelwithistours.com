@@ -88,8 +88,15 @@ endif; ?>
     <link rel="icon" type="image/x-icon" href="<?php echo htmlspecialchars($favicon_path); ?>">
     <link rel="apple-touch-icon" href="<?php echo htmlspecialchars($favicon_path); ?>">
     
-    <!-- Fonts -->
-    <link rel="stylesheet" href="assets/css/style.css">
+    <!-- Site Styles (file timestamps prevent stale browser/CDN caches after deployment) -->
+    <?php
+    $style_version = (string) (@filemtime(__DIR__ . '/../assets/css/style.css') ?: '1');
+    $tripadvisor_style_version = (string) (@filemtime(__DIR__ . '/../assets/css/tripadvisor.css') ?: '1');
+    $review_style_version = (string) (@filemtime(__DIR__ . '/../assets/css/review-submit.css') ?: '1');
+    ?>
+    <link rel="stylesheet" href="assets/css/style.css?v=<?php echo rawurlencode($style_version); ?>">
+    <link rel="stylesheet" href="assets/css/tripadvisor.css?v=<?php echo rawurlencode($tripadvisor_style_version); ?>">
+    <link rel="stylesheet" href="assets/css/review-submit.css?v=<?php echo rawurlencode($review_style_version); ?>">
     
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
