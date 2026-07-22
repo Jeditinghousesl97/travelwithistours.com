@@ -53,6 +53,11 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
+    <url>
+        <loc><?php echo $base_url; ?>/review.php</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
 
     <!-- Dynamic Tour Pages -->
     <?php

@@ -752,12 +752,16 @@ catch (Exception $e) {
 $tripadvisor_widget_embed = trim((string) ($h_settings['tripadvisor_widget_embed'] ?? ''));
 ?>
 
-<?php if (count($tripadvisor_reviews) > 0 || $tripadvisor_widget_embed !== ''): ?>
-<section class="tripadvisor-home-section">
+<section class="tripadvisor-home-section" id="tripadvisor-reviews">
     <div class="container">
-        <div class="tripadvisor-section-header">
-            <h2>TripAdvisor Reviews</h2>
-            <p>Browse a curated selection of guest feedback from TripAdvisor, then explore the official widget alongside it without leaving the flow of the homepage.</p>
+        <div class="tripadvisor-section-header tripadvisor-section-header-row">
+            <div class="tripadvisor-section-copy">
+                <h2>TripAdvisor Reviews</h2>
+                <p>Read genuine guest experiences, explore our TripAdvisor presence, or share the story of your own Sri Lankan journey.</p>
+            </div>
+            <a class="tripadvisor-write-review-btn" href="review.php">
+                <i class="far fa-pen-to-square"></i> Write a review
+            </a>
         </div>
 
         <div class="tripadvisor-home-grid">
@@ -769,6 +773,7 @@ $tripadvisor_widget_embed = trim((string) ($h_settings['tripadvisor_widget_embed
                                 <?php
                                 $excerpt = tripadvisor_review_excerpt((string) $review['review_text'], 80);
                                 $review_link = trim((string) ($review['review_link'] ?? ''));
+                                $review_photos = tripadvisor_review_photos((string) ($review['review_photos'] ?? ''));
                                 ?>
                                 <div class="swiper-slide" style="height: auto;">
                                     <article class="tripadvisor-review-card">
@@ -803,8 +808,18 @@ $tripadvisor_widget_embed = trim((string) ($h_settings['tripadvisor_widget_embed
                                             <button type="button" class="tripadvisor-read-toggle">Read more</button>
                                         <?php endif; ?>
 
+                                        <?php if (!empty($review_photos)): ?>
+                                            <div class="tripadvisor-review-photos" aria-label="Review photos">
+                                                <?php foreach ($review_photos as $photo_index => $photo): ?>
+                                                    <a class="tripadvisor-review-photo-link" href="<?php echo htmlspecialchars($photo); ?>" aria-label="Open review photo <?php echo $photo_index + 1; ?>">
+                                                        <img class="tripadvisor-review-photo" src="<?php echo htmlspecialchars($photo); ?>" alt="Photo shared by <?php echo htmlspecialchars($review['reviewer_name']); ?>" loading="lazy">
+                                                    </a>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
+
                                         <div class="tripadvisor-review-footer">
-                                            <p class="tripadvisor-trip-date"><?php echo !empty($review['trip_date']) ? 'Trip date: ' . htmlspecialchars($review['trip_date']) : ''; ?></p>
+                                            <p class="tripadvisor-trip-date"><?php echo !empty($review['trip_date']) ? 'Trip date: ' . htmlspecialchars(tripadvisor_format_trip_date((string) $review['trip_date'])) : ''; ?></p>
                                             <?php if ($review_link !== ''): ?>
                                                 <a class="tripadvisor-review-link" href="<?php echo htmlspecialchars($review_link); ?>" target="_blank" rel="noopener noreferrer">View review</a>
                                             <?php endif; ?>
@@ -816,7 +831,7 @@ $tripadvisor_widget_embed = trim((string) ($h_settings['tripadvisor_widget_embed
                         <div class="swiper-pagination"></div>
                     </div>
                 <?php else: ?>
-                    <div class="tripadvisor-review-empty">TripAdvisor reviews will appear here once they are added in the admin panel.</div>
+                    <div class="tripadvisor-review-empty">Be the first guest to share a Travel with IS Tours experience.</div>
                 <?php endif; ?>
             </div>
 
@@ -834,7 +849,6 @@ $tripadvisor_widget_embed = trim((string) ($h_settings['tripadvisor_widget_embed
         </div>
     </div>
 </section>
-<?php endif; ?>
 
 <?php
 $short_videos = [];
@@ -951,6 +965,12 @@ endif;
         new SimpleLightbox('.home-gallery-lightbox', { 
             captionsData: 'alt',
             captionDelay: 250,
+            animationSpeed: 200,
+            fadeSpeed: 200,
+        });
+
+        new SimpleLightbox('.tripadvisor-review-photo-link', {
+            captions: false,
             animationSpeed: 200,
             fadeSpeed: 200,
         });
