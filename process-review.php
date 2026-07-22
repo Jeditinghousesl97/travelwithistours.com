@@ -209,10 +209,11 @@ try {
     }
 
     $display_order = (int) $pdo->query("SELECT COALESCE(MIN(display_order), 0) - 1 FROM tripadvisor_reviews")->fetchColumn();
+    $reviewer_image = $uploaded_files[0] ?? null;
     $insert = $pdo->prepare(
         "INSERT INTO tripadvisor_reviews
         (reviewer_name, reviewer_location, review_title, rating, review_text, trip_date, review_link, reviewer_image, review_photos, submission_source, display_order, is_active)
-        VALUES (?, ?, ?, ?, ?, ?, NULL, NULL, ?, 'guest', ?, 1)"
+        VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, 'guest', ?, 1)"
     );
     $insert->execute([
         $old['reviewer_name'],
@@ -221,6 +222,7 @@ try {
         $old['rating'],
         $old['review_text'],
         $old['trip_date'],
+        $reviewer_image,
         $uploaded_files ? json_encode($uploaded_files, JSON_UNESCAPED_SLASHES) : null,
         $display_order,
     ]);

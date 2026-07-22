@@ -125,7 +125,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare(
             "INSERT INTO tripadvisor_reviews
             (reviewer_name, reviewer_location, review_title, rating, review_text, trip_date, review_link, reviewer_image, review_photos, submission_source, display_order, is_active)
-            SELECT reviewer_name, reviewer_location, review_title, rating, review_text, trip_date, review_link, reviewer_image, NULL, 'admin', display_order, is_active
+            SELECT reviewer_name, reviewer_location, review_title, rating, review_text, trip_date, review_link,
+                CASE WHEN submission_source = 'guest' THEN NULL ELSE reviewer_image END,
+                NULL, 'admin', display_order, is_active
             FROM tripadvisor_reviews
             WHERE id = ?"
         );
@@ -268,11 +270,15 @@ $reviews = $pdo->query("SELECT * FROM tripadvisor_reviews ORDER BY display_order
         <tbody>
             <?php if (count($reviews) > 0): ?>
                 <?php foreach ($reviews as $review): ?>
+                    <?php
+                    $admin_review_photos = tripadvisor_review_photos((string) ($review['review_photos'] ?? ''));
+                    $admin_reviewer_avatar = trim((string) ($review['reviewer_image'] ?? '')) ?: ($admin_review_photos[0] ?? '');
+                    ?>
                     <tr>
                         <td>
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                <?php if (!empty($review['reviewer_image'])): ?>
-                                    <img src="../<?php echo htmlspecialchars($review['reviewer_image']); ?>" alt="<?php echo htmlspecialchars($review['reviewer_name']); ?>" style="width: 46px; height: 46px; border-radius: 50%; object-fit: cover;">
+                                <?php if ($admin_reviewer_avatar !== ''): ?>
+                                    <img src="../<?php echo htmlspecialchars($admin_reviewer_avatar); ?>" alt="<?php echo htmlspecialchars($review['reviewer_name']); ?>" style="width: 46px; height: 46px; border-radius: 50%; object-fit: cover;">
                                 <?php else: ?>
                                     <div style="width: 46px; height: 46px; border-radius: 50%; background: #e0f7fa; color: #00838f; display: flex; align-items: center; justify-content: center; font-weight: 700;">
                                         <?php echo htmlspecialchars(tripadvisor_reviewer_initials($review['reviewer_name'])); ?>
@@ -287,7 +293,7 @@ $reviews = $pdo->query("SELECT * FROM tripadvisor_reviews ORDER BY display_order
                         <td>
                             <?php if (($review['submission_source'] ?? 'admin') === 'guest'): ?>
                                 <span style="display: inline-block; padding: 4px 8px; border-radius: 20px; background: #eaf8f4; color: #0f7b55; font-size: 11px; font-weight: 700;">Guest</span>
-                                <?php $list_photos = tripadvisor_review_photos((string) ($review['review_photos'] ?? '')); ?>
+                                <?php $list_photos = $admin_review_photos; ?>
                                 <?php if (!empty($list_photos)): ?>
                                     <div style="font-size: 11px; color: #777; margin-top: 5px;"><?php echo count($list_photos); ?> photo<?php echo count($list_photos) === 1 ? '' : 's'; ?></div>
                                 <?php endif; ?>

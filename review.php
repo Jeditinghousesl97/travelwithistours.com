@@ -38,12 +38,13 @@ function review_old_value(array $values, string $key, string $default = ''): str
 include 'includes/header.php';
 ?>
 
-<br>
-<br>
-<br>
+
 
 <section class="page-header" style="background-image: linear-gradient(rgba(0,0,0,0.54), rgba(0,0,0,0.54)), url('assets/images/headers/gallery.webp'); background-color: #333; padding: 110px 0; text-align: center; background-size: cover; background-position: center; color: #fff;">
     <div class="container">
+        <br>
+        <br>
+        <br>
         <h1 style="font-family: 'Playfair Display', serif; font-size: 48px; line-height: 1.15; margin-bottom: 12px;">Share Your Experience</h1>
         <p style="max-width: 650px; margin: 0 auto; font-size: 18px; color: #fff;">Your story can help another traveler discover Sri Lanka with confidence.</p>
     </div>

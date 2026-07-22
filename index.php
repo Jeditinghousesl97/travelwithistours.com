@@ -774,13 +774,14 @@ $tripadvisor_widget_embed = trim((string) ($h_settings['tripadvisor_widget_embed
                                 $excerpt = tripadvisor_review_excerpt((string) $review['review_text'], 80);
                                 $review_link = trim((string) ($review['review_link'] ?? ''));
                                 $review_photos = tripadvisor_review_photos((string) ($review['review_photos'] ?? ''));
+                                $reviewer_avatar = trim((string) ($review['reviewer_image'] ?? '')) ?: ($review_photos[0] ?? '');
                                 ?>
                                 <div class="swiper-slide" style="height: auto;">
                                     <article class="tripadvisor-review-card">
                                         <div class="tripadvisor-review-top">
                                             <div class="tripadvisor-reviewer">
-                                                <?php if (!empty($review['reviewer_image'])): ?>
-                                                    <img class="tripadvisor-avatar" src="<?php echo htmlspecialchars($review['reviewer_image']); ?>" alt="<?php echo htmlspecialchars($review['reviewer_name']); ?>">
+                                                <?php if ($reviewer_avatar !== ''): ?>
+                                                    <img class="tripadvisor-avatar" src="<?php echo htmlspecialchars($reviewer_avatar); ?>" alt="<?php echo htmlspecialchars($review['reviewer_name']); ?>">
                                                 <?php else: ?>
                                                     <div class="tripadvisor-avatar-placeholder"><?php echo htmlspecialchars(tripadvisor_reviewer_initials((string) $review['reviewer_name'])); ?></div>
                                                 <?php endif; ?>
