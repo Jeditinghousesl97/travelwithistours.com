@@ -10,6 +10,7 @@ ensure_tripadvisor_reviews_schema($pdo);
 
 $page_title = 'Write a Review';
 $page_description = 'Share your Travel with IS Tours experience and help future guests plan their Sri Lankan journey.';
+$body_class = 'review-submission-page';
 
 if (empty($_SESSION['review_csrf_token'])) {
     $_SESSION['review_csrf_token'] = bin2hex(random_bytes(32));
@@ -204,6 +205,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const uploadPercent = document.getElementById('reviewUploadPercent');
     const uploadProgressTrack = document.getElementById('reviewUploadProgressTrack');
     const uploadProgressBar = document.getElementById('reviewUploadProgressBar');
+    let selectedPhotos = [];
+    let photoSequence = 0;
+    let previewObjectUrls = [];
 
     function updateRating(selectedValue) {
         ratingOptions.forEach(function (option, index) {
@@ -225,31 +229,91 @@ document.addEventListener('DOMContentLoaded', function () {
     reviewText.addEventListener('input', updateCharacterCount);
     updateCharacterCount();
 
-    photoInput.addEventListener('change', function () {
+    function photoSignature(file) {
+        return [file.name, file.size, file.lastModified].join(':');
+    }
+
+    function syncPhotoInput() {
+        const transfer = new DataTransfer();
+        selectedPhotos.forEach(function (photo) {
+            transfer.items.add(photo.file);
+        });
+        photoInput.files = transfer.files;
+    }
+
+    function renderSelectedPhotos(message) {
+        previewObjectUrls.forEach(function (url) {
+            URL.revokeObjectURL(url);
+        });
+        previewObjectUrls = [];
         photoPreviews.innerHTML = '';
-        photoMessage.textContent = '';
-        const files = Array.from(photoInput.files);
 
-        if (files.length > 5) {
-            photoMessage.textContent = 'Please choose no more than 5 photos.';
-            photoInput.value = '';
-            return;
-        }
+        selectedPhotos.forEach(function (photo, index) {
+            const previewItem = document.createElement('div');
+            previewItem.className = 'review-photo-preview-item';
 
-        files.forEach(function (file) {
             const image = document.createElement('img');
             image.className = 'review-photo-preview';
-            image.alt = 'Selected review photo preview';
-            image.src = URL.createObjectURL(file);
-            image.addEventListener('load', function () {
-                URL.revokeObjectURL(image.src);
+            image.alt = 'Selected review photo ' + (index + 1);
+            const objectUrl = URL.createObjectURL(photo.file);
+            previewObjectUrls.push(objectUrl);
+            image.src = objectUrl;
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'review-photo-remove';
+            removeButton.setAttribute('aria-label', 'Remove ' + photo.file.name);
+            removeButton.title = 'Remove photo';
+            removeButton.innerHTML = '&times;';
+            removeButton.addEventListener('click', function () {
+                selectedPhotos = selectedPhotos.filter(function (selectedPhoto) {
+                    return selectedPhoto.id !== photo.id;
+                });
+                syncPhotoInput();
+                renderSelectedPhotos();
             });
-            photoPreviews.appendChild(image);
+
+            previewItem.appendChild(image);
+            previewItem.appendChild(removeButton);
+            photoPreviews.appendChild(previewItem);
         });
 
-        if (files.length > 0) {
-            photoMessage.textContent = files.length + (files.length === 1 ? ' photo selected.' : ' photos selected.');
+        if (message) {
+            photoMessage.textContent = message;
+        } else if (selectedPhotos.length === 5) {
+            photoMessage.textContent = '5 photos selected. Maximum reached.';
+        } else if (selectedPhotos.length > 0) {
+            photoMessage.textContent = selectedPhotos.length + (selectedPhotos.length === 1 ? ' photo selected. Choose again to add more.' : ' photos selected. Choose again to add more.');
+        } else {
+            photoMessage.textContent = '';
         }
+    }
+
+    photoInput.addEventListener('change', function () {
+        const newFiles = Array.from(photoInput.files);
+        const existingSignatures = new Set(selectedPhotos.map(function (photo) {
+            return photoSignature(photo.file);
+        }));
+        let skippedForLimit = false;
+
+        newFiles.forEach(function (file) {
+            const signature = photoSignature(file);
+            if (existingSignatures.has(signature)) {
+                return;
+            }
+
+            if (selectedPhotos.length >= 5) {
+                skippedForLimit = true;
+                return;
+            }
+
+            photoSequence += 1;
+            selectedPhotos.push({ id: photoSequence, file: file });
+            existingSignatures.add(signature);
+        });
+
+        syncPhotoInput();
+        renderSelectedPhotos(skippedForLimit ? 'Maximum 5 photos. Extra selected photos were not added.' : '');
     });
 
     ['dragenter', 'dragover'].forEach(function (eventName) {

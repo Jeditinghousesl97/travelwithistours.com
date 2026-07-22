@@ -421,7 +421,7 @@ endif; ?>
         }
     </style>
 </head>
-<body>
+<body<?php echo !empty($body_class) ? ' class="' . htmlspecialchars((string) $body_class, ENT_QUOTES, 'UTF-8') . '"' : ''; ?>>
 
 <!-- Header -->
 <header>

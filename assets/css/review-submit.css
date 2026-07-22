@@ -179,11 +179,51 @@
     margin-top: 14px;
 }
 
+.review-photo-preview-item {
+    position: relative;
+    width: 82px;
+    height: 82px;
+}
+
 .review-photo-preview {
-    width: 76px;
-    height: 76px;
+    width: 100%;
+    height: 100%;
     border-radius: 9px;
     object-fit: cover;
+}
+
+.review-photo-remove {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 25px;
+    height: 25px;
+    padding: 0 0 2px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #111;
+    color: #fff;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.25);
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.review-photo-remove:hover,
+.review-photo-remove:focus-visible {
+    background: #d93025;
+    outline: none;
+    transform: scale(1.08);
+}
+
+.review-submission-page .floating-whatsapp {
+    right: auto !important;
+    left: 30px !important;
 }
 
 .review-form-errors {
@@ -404,5 +444,10 @@
 
     .review-submit-button {
         width: 100%;
+    }
+
+    .review-submission-page .floating-whatsapp {
+        right: auto !important;
+        left: 20px !important;
     }
 }
