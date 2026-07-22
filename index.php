@@ -843,7 +843,7 @@ $tripadvisor_widget_embed = trim((string) ($h_settings['tripadvisor_widget_embed
                         </div>
                     </aside>
                 <?php else: ?>
-                    <div class="tripadvisor-widget-placeholder">Paste the TripAdvisor widget embed code in the admin panel to show it here.</div>
+                    <div class="tripadvisor-widget-placeholder">Trip Advisor Live Stats Loading...</div>
                 <?php endif; ?>
             </div>
         </div>
