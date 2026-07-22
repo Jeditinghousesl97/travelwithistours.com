@@ -8,8 +8,23 @@ require_once 'includes/tripadvisor_reviews.php';
 
 ensure_tripadvisor_reviews_schema($pdo);
 
+function is_ajax_review_request(): bool
+{
+    return strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest';
+}
+
 function redirect_review_form(array $errors, array $old = []): void
 {
+    if (is_ajax_review_request()) {
+        http_response_code(422);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'errors' => array_values($errors),
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     $_SESSION['review_form_errors'] = $errors;
     $_SESSION['review_form_old'] = $old;
     header('Location: review.php#review-form');
@@ -213,6 +228,16 @@ try {
     $_SESSION['review_csrf_token'] = bin2hex(random_bytes(32));
     $_SESSION['review_submitted'] = true;
     unset($_SESSION['review_form_errors'], $_SESSION['review_form_old']);
+
+    if (is_ajax_review_request()) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => true,
+            'redirect' => 'review.php?submitted=1',
+        ], JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
     header('Location: review.php?submitted=1');
     exit;
 } catch (RuntimeException $e) {

@@ -37,6 +37,10 @@ function review_old_value(array $values, string $key, string $default = ''): str
 include 'includes/header.php';
 ?>
 
+<br>
+<br>
+<br>
+
 <section class="page-header" style="background-image: linear-gradient(rgba(0,0,0,0.54), rgba(0,0,0,0.54)), url('assets/images/headers/gallery.webp'); background-color: #333; padding: 110px 0; text-align: center; background-size: cover; background-position: center; color: #fff;">
     <div class="container">
         <h1 style="font-family: 'Playfair Display', serif; font-size: 48px; line-height: 1.15; margin-bottom: 12px;">Share Your Experience</h1>
@@ -64,16 +68,14 @@ include 'includes/header.php';
                         <p>Share the details future guests would find helpful. Fields marked with * are required.</p>
                     </div>
 
-                    <?php if (!empty($review_errors)): ?>
-                        <div class="review-form-errors" role="alert">
-                            <strong>Please check the following:</strong>
-                            <ul>
-                                <?php foreach ($review_errors as $error): ?>
-                                    <li><?php echo htmlspecialchars((string) $error); ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                    <?php endif; ?>
+                    <div class="review-form-errors" id="reviewFormErrors" role="alert" <?php echo empty($review_errors) ? 'hidden' : ''; ?>>
+                        <strong>Please check the following:</strong>
+                        <ul id="reviewFormErrorList">
+                            <?php foreach ($review_errors as $error): ?>
+                                <li><?php echo htmlspecialchars((string) $error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
 
                     <form action="process-review.php" method="POST" enctype="multipart/form-data" id="guestReviewForm">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['review_csrf_token']); ?>">
@@ -147,7 +149,17 @@ include 'includes/header.php';
 
                         <p class="review-privacy-note" style="border-top: 0; padding-top: 0; margin-bottom: 22px;">By submitting, you confirm this is your genuine experience and agree that your review and uploaded photos may be published on this website.</p>
 
-                        <button class="review-submit-button" type="submit">
+                        <div class="review-upload-progress" id="reviewUploadProgress" hidden aria-live="polite">
+                            <div class="review-upload-progress-meta">
+                                <span id="reviewUploadStatus">Uploading photos...</span>
+                                <strong id="reviewUploadPercent">0%</strong>
+                            </div>
+                            <div class="review-upload-progress-track" id="reviewUploadProgressTrack" role="progressbar" aria-label="Photo upload progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                <span id="reviewUploadProgressBar"></span>
+                            </div>
+                        </div>
+
+                        <button class="review-submit-button" id="reviewSubmitButton" type="submit">
                             Submit your review <i class="fas fa-arrow-right"></i>
                         </button>
                     </form>
@@ -183,6 +195,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const photoPreviews = document.getElementById('reviewPhotoPreviews');
     const photoMessage = document.getElementById('reviewPhotoMessage');
     const dropzone = document.getElementById('reviewPhotoDropzone');
+    const reviewForm = document.getElementById('guestReviewForm');
+    const submitButton = document.getElementById('reviewSubmitButton');
+    const formErrors = document.getElementById('reviewFormErrors');
+    const formErrorList = document.getElementById('reviewFormErrorList');
+    const uploadProgress = document.getElementById('reviewUploadProgress');
+    const uploadStatus = document.getElementById('reviewUploadStatus');
+    const uploadPercent = document.getElementById('reviewUploadPercent');
+    const uploadProgressTrack = document.getElementById('reviewUploadProgressTrack');
+    const uploadProgressBar = document.getElementById('reviewUploadProgressBar');
 
     function updateRating(selectedValue) {
         ratingOptions.forEach(function (option, index) {
@@ -241,6 +262,120 @@ document.addEventListener('DOMContentLoaded', function () {
         dropzone.addEventListener(eventName, function () {
             dropzone.classList.remove('is-dragover');
         });
+    });
+
+    function setSubmitting(isSubmitting) {
+        submitButton.disabled = isSubmitting;
+        submitButton.classList.toggle('is-loading', isSubmitting);
+        submitButton.innerHTML = isSubmitting
+            ? '<span class="review-button-spinner" aria-hidden="true"></span><span>Submitting review...</span>'
+            : 'Submit your review <i class="fas fa-arrow-right"></i>';
+    }
+
+    function setUploadProgress(percent, statusText) {
+        const safePercent = Math.max(0, Math.min(100, percent));
+        uploadProgressBar.style.width = safePercent + '%';
+        uploadPercent.textContent = safePercent + '%';
+        uploadStatus.textContent = statusText;
+        uploadProgressTrack.setAttribute('aria-valuenow', String(safePercent));
+    }
+
+    function showSubmissionErrors(errors) {
+        const messages = Array.isArray(errors) && errors.length
+            ? errors
+            : ['We could not submit your review. Please try again.'];
+
+        formErrorList.innerHTML = '';
+        messages.forEach(function (message) {
+            const item = document.createElement('li');
+            item.textContent = message;
+            formErrorList.appendChild(item);
+        });
+        formErrors.hidden = false;
+        formErrors.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        if (window.turnstile && document.querySelector('.cf-turnstile')) {
+            window.turnstile.reset();
+        }
+    }
+
+    function restoreSubmissionForm() {
+        setSubmitting(false);
+        uploadProgress.hidden = true;
+        setUploadProgress(0, 'Uploading photos...');
+    }
+
+    reviewForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        if (submitButton.disabled) {
+            return;
+        }
+
+        if (!reviewForm.checkValidity()) {
+            reviewForm.reportValidity();
+            return;
+        }
+
+        formErrors.hidden = true;
+        formErrorList.innerHTML = '';
+        setSubmitting(true);
+
+        const hasPhotos = photoInput.files.length > 0;
+        uploadProgress.hidden = !hasPhotos;
+        if (hasPhotos) {
+            setUploadProgress(0, 'Preparing photos...');
+        }
+
+        const request = new XMLHttpRequest();
+        request.open('POST', reviewForm.action, true);
+        request.timeout = 120000;
+        request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        request.setRequestHeader('Accept', 'application/json');
+
+        if (hasPhotos) {
+            request.upload.addEventListener('progress', function (progressEvent) {
+                if (!progressEvent.lengthComputable) {
+                    uploadStatus.textContent = 'Uploading photos...';
+                    return;
+                }
+
+                const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+                setUploadProgress(percent, percent < 100 ? 'Uploading photos...' : 'Upload complete. Publishing review...');
+            });
+        }
+
+        request.addEventListener('load', function () {
+            let response = null;
+            try {
+                response = JSON.parse(request.responseText);
+            } catch (error) {
+                response = null;
+            }
+
+            if (request.status >= 200 && request.status < 300 && response && response.success) {
+                if (hasPhotos) {
+                    setUploadProgress(100, 'Review published. Redirecting...');
+                }
+                window.location.assign(response.redirect || 'review.php?submitted=1');
+                return;
+            }
+
+            restoreSubmissionForm();
+            showSubmissionErrors(response && response.errors ? response.errors : null);
+        });
+
+        request.addEventListener('error', function () {
+            restoreSubmissionForm();
+            showSubmissionErrors(['A network error interrupted the submission. Please check your connection and try again.']);
+        });
+
+        request.addEventListener('timeout', function () {
+            restoreSubmissionForm();
+            showSubmissionErrors(['The upload took too long. Please use smaller photos or try again on a stronger connection.']);
+        });
+
+        request.send(new FormData(reviewForm));
     });
 });
 </script>
