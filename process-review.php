@@ -227,6 +227,38 @@ try {
         $display_order,
     ]);
 
+    $review_id = (int) $pdo->lastInsertId();
+
+    // A notification failure must never undo or report failure for a review
+    // that has already been published successfully.
+    try {
+        require_once __DIR__ . '/includes/mailer.php';
+
+        $notification_title = preg_replace('/[\r\n]+/', ' ', $old['review_title']);
+        $notification_body = implode("\n", [
+            'A new guest review was published automatically on the website.',
+            '',
+            'Review ID: ' . $review_id,
+            'Reviewer: ' . $old['reviewer_name'],
+            'Location: ' . $old['reviewer_location'],
+            'Rating: ' . $old['rating'] . '/5',
+            'Trip date: ' . $old['trip_date'],
+            'Review title: ' . $old['review_title'],
+            'Photos: ' . count($uploaded_files),
+            '',
+            'Review:',
+            $old['review_text'],
+            '',
+            'You can manage this review in Admin > TripAdvisor Reviews.',
+        ]);
+
+        if (!sendInquiryEmail($pdo, 'New guest review: ' . $notification_title, $notification_body)) {
+            error_log('Guest review notification email was not sent for review ID ' . $review_id . '.');
+        }
+    } catch (Throwable $mail_error) {
+        error_log('Guest review notification email error for review ID ' . $review_id . ': ' . $mail_error->getMessage());
+    }
+
     $_SESSION['review_csrf_token'] = bin2hex(random_bytes(32));
     $_SESSION['review_submitted'] = true;
     unset($_SESSION['review_form_errors'], $_SESSION['review_form_old']);
