@@ -43,6 +43,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $display_order = (int) ($_POST['display_order'] ?? 0);
         $is_active = isset($_POST['is_active']) ? 1 : 0;
         $reviewer_image = $_POST['current_image'] ?? '';
+        $review_id = !empty($_POST['id']) ? (int) $_POST['id'] : 0;
+        $review_photos_json = null;
+        $removed_review_photos = [];
+
+        if ($review_id > 0) {
+            $photo_stmt = $pdo->prepare("SELECT review_photos FROM tripadvisor_reviews WHERE id = ?");
+            $photo_stmt->execute([$review_id]);
+            $stored_review_photos = tripadvisor_review_photos((string) ($photo_stmt->fetchColumn() ?: ''));
+            $requested_removals = isset($_POST['remove_review_photos']) && is_array($_POST['remove_review_photos'])
+                ? array_map('strval', $_POST['remove_review_photos'])
+                : [];
+            $removal_lookup = array_fill_keys($requested_removals, true);
+            $remaining_review_photos = [];
+
+            foreach ($stored_review_photos as $photo) {
+                if (isset($removal_lookup[$photo])) {
+                    $removed_review_photos[] = $photo;
+                } else {
+                    $remaining_review_photos[] = $photo;
+                }
+            }
+
+            if (!empty($remaining_review_photos)) {
+                $review_photos_json = json_encode($remaining_review_photos, JSON_UNESCAPED_SLASHES);
+            }
+        }
 
         if (isset($_FILES['reviewer_image']) && (int) $_FILES['reviewer_image']['error'] === 0) {
             $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
@@ -61,10 +87,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        if (!empty($_POST['id'])) {
+        if ($review_id > 0) {
             $stmt = $pdo->prepare(
                 "UPDATE tripadvisor_reviews
-                SET reviewer_name = ?, reviewer_location = ?, review_title = ?, rating = ?, review_text = ?, trip_date = ?, review_link = ?, reviewer_image = ?, display_order = ?, is_active = ?
+                SET reviewer_name = ?, reviewer_location = ?, review_title = ?, rating = ?, review_text = ?, trip_date = ?, review_link = ?, reviewer_image = ?, review_photos = ?, display_order = ?, is_active = ?
                 WHERE id = ?"
             );
             $stmt->execute([
@@ -76,10 +102,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $trip_date,
                 $review_link,
                 $reviewer_image,
+                $review_photos_json,
                 $display_order,
                 $is_active,
-                (int) $_POST['id'],
+                $review_id,
             ]);
+
+            if (!empty($removed_review_photos)) {
+                tripadvisor_delete_review_photos(
+                    json_encode($removed_review_photos, JSON_UNESCAPED_SLASHES),
+                    dirname(__DIR__)
+                );
+            }
         } else {
             $stmt = $pdo->prepare(
                 "INSERT INTO tripadvisor_reviews
@@ -213,12 +247,22 @@ $reviews = $pdo->query("SELECT * FROM tripadvisor_reviews ORDER BY display_order
                 <label class="form-label">Guest-submitted Photos</label>
                 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                     <?php foreach ($edit_review_photos as $photo): ?>
-                        <a href="../<?php echo htmlspecialchars($photo); ?>" target="_blank" rel="noopener noreferrer">
-                            <img src="../<?php echo htmlspecialchars($photo); ?>" alt="Guest review photo" style="width: 72px; height: 72px; border-radius: 8px; object-fit: cover;">
-                        </a>
+                        <div class="guest-review-photo" style="position: relative;">
+                            <input type="checkbox" name="remove_review_photos[]" value="<?php echo htmlspecialchars($photo); ?>" style="display: none;">
+                            <a href="../<?php echo htmlspecialchars($photo); ?>" target="_blank" rel="noopener noreferrer">
+                                <img src="../<?php echo htmlspecialchars($photo); ?>" alt="Guest review photo" style="display: block; width: 72px; height: 72px; border-radius: 8px; object-fit: cover;">
+                            </a>
+                            <button
+                                type="button"
+                                aria-label="Remove guest photo"
+                                title="Remove photo"
+                                onclick="removeGuestReviewPhoto(this)"
+                                style="position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; padding: 0; border: 2px solid #fff; border-radius: 50%; background: #dc3545; color: #fff; font-size: 14px; font-weight: 700; line-height: 16px; cursor: pointer;"
+                            >&times;</button>
+                        </div>
                     <?php endforeach; ?>
                 </div>
-                <small style="display: block; color: #666; margin-top: 8px;">These photos were uploaded with the guest review and remain attached when the text is edited.</small>
+                <small style="display: block; color: #666; margin-top: 8px;">Click × to remove a photo, then update the review to save your changes.</small>
             </div>
         <?php endif; ?>
 
@@ -332,5 +376,17 @@ $reviews = $pdo->query("SELECT * FROM tripadvisor_reviews ORDER BY display_order
         </tbody>
     </table>
 </div>
+
+<script>
+function removeGuestReviewPhoto(button) {
+    var photo = button.closest('.guest-review-photo');
+    var checkbox = photo ? photo.querySelector('input[name="remove_review_photos[]"]') : null;
+
+    if (photo && checkbox) {
+        checkbox.checked = true;
+        photo.style.display = 'none';
+    }
+}
+</script>
 
 <?php include 'includes/footer.php'; ?>
